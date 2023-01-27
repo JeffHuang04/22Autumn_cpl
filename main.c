@@ -4,7 +4,7 @@
 
 int main() {
   init_ramfs();
-  assert(rmkdir("/dir") == 0);
+  assert(rmkdir("/dir/1.txt") == 0);
   assert(rmkdir("//dir") == -1);
   assert(rmkdir("/a/b") == -1);
   int fd;
