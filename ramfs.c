@@ -142,7 +142,7 @@ int rmkdir(const char *pathname) {
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
                 return 0;
-            } else {//判断链表自身为空
+            } else {//判断链表自身为空并引入新节点
                 instruction->sibling = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
@@ -150,7 +150,7 @@ int rmkdir(const char *pathname) {
                 return 0;
             }
         }
-        if (instruction->shortname == NULL) {
+        if (instruction->shortname == NULL) {//排除直接建立跨级目录即这级目录为空
             return -1;
         }
         for (;;) {
@@ -161,7 +161,7 @@ int rmkdir(const char *pathname) {
                 instruction = instruction->child;
                 break;
             }
-            if (instruction->sibling == NULL) {
+            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
                 return -1;
             }
             instruction = instruction->sibling;
@@ -173,7 +173,6 @@ int rmkdir(const char *pathname) {
 }
 
 int rrmdir(const char *pathname) {
-
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
@@ -181,12 +180,67 @@ int rrmdir(const char *pathname) {
     if (index == 0) {
         return -1;
     }
+    int count = strlen(str[index - 1]);
+    if (count >= 4 && str[index - 1][count - 1] == 't' && str[index - 1][count - 2] == 'x'
+        && str[index - 1][count - 3] == 't' && str[index - 1][count - 4] == '.') {
+        return -1;
+    }//判断最后类型是目录
     node *instruction = malloc(sizeof(struct node) + 5);
     instruction = root->child;
-    for (int i = 0; i <= index - 1; i++) {
+    node *temp_instruction = malloc(sizeof(struct node) + 5);
+    node *temp_instruction_up = malloc(sizeof(struct node) + 5);//上一级目录
+    for (int i = 0; i <= index; i++) {
+        if(i == index){
+            if(instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
+                if(temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {
+                    temp_instruction_up->child = NULL;
+                }else if (temp_instruction_up->child == temp_instruction) {
+                    temp_instruction_up->child = temp_instruction->sibling;
+                }else {
+                    node *temp_ = malloc(sizeof(struct node) + 5);
+                    temp_ = temp_instruction_up->child;
+                    for (;;) {
+                        if(strcmp(temp_->sibling->shortname,str[index - 1])){
+                            break;
+                        }
+                        temp_ = temp_->sibling;
+                    }
+                    if(temp_instruction->sibling == NULL) {
+                        temp_->sibling = NULL;
+                    }else {
+                        temp_->sibling = temp_instruction->sibling;
+                    }
+                    free(temp_);
+                }
+                return 0;
+            }else {
+                return -1;
+            }
+        }
+        if (instruction->shortname == NULL) {//排除直接查找跨级目录即这级目录为空
+            return -1;
+        }
+        for(;;){
+            if (strcmp(str[i], instruction->shortname) == 0) {
+                if(i == index - 1) {
+                    temp_instruction = instruction;
+                }
+                if(i == index - 2) {
+                    temp_instruction_up = instruction;
+                }
+                instruction = instruction->child;
+                break;
+            }
+            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+                return -1;
+            }
+            instruction = instruction->sibling;
+        }
 
     }
-
+    free(temp_instruction);
+    free(temp_instruction_up);
+    free(instruction);
     free(temp_string);
     free(str);
 }
