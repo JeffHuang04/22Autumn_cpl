@@ -130,10 +130,10 @@ int rmkdir(const char *pathname) {
                         return -1;
                     }
                 }
-                instruction = instruction->sibling;
                 if (instruction->sibling == NULL) {//（之后循环退出的条件）
                     break;
                 }
+                instruction = instruction->sibling;
             }//检查有没有重名的
             if (instruction->shortname != NULL) {//判断链表自身不为空并引入新节点
                 instruction->sibling = malloc(sizeof(struct node));
