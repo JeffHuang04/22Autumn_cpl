@@ -12,14 +12,14 @@ typedef struct node {
         FILE_NODE = 1,
         DIR_NODE  = 2
     }type;
-    struct node *subentries;
+    struct node *child;
     struct node *sibling;
     void *contnet;
-    int number_subentries;
+//    int number_child;
     int size;
-    char *name;
+    char *shortname;
 }node;
-node root;
+node *root;
 typedef struct filedesc{
     bool use;
     int offset;
@@ -29,17 +29,17 @@ typedef struct filedesc{
     node *file;
 }filedesc;
 filedesc filed[max_fd];
-void pathname_simple(char **str, char *temp_string,const char *pathname) {
+int pathname_simple(char **str, char *temp_string, const char *pathname) {
     int lengthofroad = strlen(pathname);
     if(*pathname == '/' && lengthofroad <= length_road){
+        int index = 0;
         char *temp = malloc(length_name + 3);
         temp = strtok(temp_string, "/");
-        int index = 0;
         while (temp != NULL){
             if(strlen(temp) > length_name) {
                 free(temp);
                 str = NULL;
-                return;
+                return 0;
             }
             str[index] = temp;
             temp = strtok(NULL,"/");
@@ -48,20 +48,20 @@ void pathname_simple(char **str, char *temp_string,const char *pathname) {
         if(pathname[lengthofroad - 1] == '/' && (strtok(str[index - 1],".text") !=NULL)) {
             free(temp);
             str = NULL;
-            return;
+            return 0;
         }
         free(temp);
-        return;
+        return index;
     } else {
         str = NULL;
-        return;
+        return 0;
     }
 }
 int ropen(const char *pathname, int flags) {
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
-    pathname_simple(str, temp_string,pathname);
+    int index = pathname_simple(str, temp_string, pathname);
     if(str == NULL) {
         return -1;
     }
@@ -92,21 +92,76 @@ int rmkdir(const char *pathname) {
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
-    pathname_simple(str, temp_string,pathname);
+    int index = pathname_simple(str, temp_string, pathname);
     if(str == NULL) {
         return -1;
     }
-    // todo
-
+    node *instruction = malloc(sizeof (struct node) + 5);
+    instruction = root->child;
+//    instruction->sibling = NULL;
+//    instruction->child = NULL;
+//    int number_low = instruction->number_child;
+    for (int i = 0; i <= index - 1 ; i ++) {
+        if (i == index - 1) {
+            for (; ; ) {
+                if(instruction->sibling == NULL && instruction->shortname != NULL)
+                if (strcmp(str[i], instruction->shortname) == 0) {
+                    return -1;
+                }
+                if (instruction->sibling == NULL) {
+                    break;
+                }
+                instruction = instruction->sibling;
+            }//检查没有重名的
+            if(instruction->shortname != NULL) {
+                instruction->sibling = malloc(sizeof(struct node));
+                instruction->sibling->sibling = NULL;
+                instruction->sibling->shortname = malloc(strlen(str[i]));
+                strcpy(instruction->sibling->shortname, str[i]);
+                if ((strtok(str[index - 1], ".text") != NULL)) {
+                    instruction->sibling->type = DIR_NODE;
+                } else {
+                    instruction->sibling->type = FILE_NODE;
+                }
+                return 0;
+            }else{
+                instruction->sibling = NULL;
+                instruction->shortname = malloc(strlen(str[i]));
+                strcpy(instruction->shortname, str[i]);
+                if ((strtok(str[index - 1], ".text") != NULL)) {
+                    instruction->type = DIR_NODE;
+                } else {
+                    instruction->type = FILE_NODE;
+                }
+                return 0;
+            }
+        }
+        for (; ; ) {
+            if(strcmp(str[i],instruction->shortname) == 0){
+                if(instruction->type == DIR_NODE) {
+//                    number_low = instruction->number_child;
+                    instruction = instruction->child;
+                    continue;
+                }else{
+                    return -1;
+                }
+            }
+            if(instruction->sibling == NULL) {
+                return -1;
+            }
+            instruction = instruction->sibling;
+        }
+    }
+    free(instruction);
     free(temp_string);
     free(str);
 }
-
 int rrmdir(const char *pathname) {
+
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
-    pathname_simple(str, temp_string,pathname);
+    int index = pathname_simple(str, temp_string, pathname);
     if(str == NULL) {
         return -1;
     }
@@ -120,7 +175,7 @@ int runlink(const char *pathname) {
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
-    pathname_simple(str, temp_string,pathname);
+    int index = pathname_simple(str, temp_string, pathname);
     if(str == NULL) {
         return -1;
     }
@@ -131,5 +186,10 @@ int runlink(const char *pathname) {
 }
 
 void init_ramfs() {
-
+    root = malloc(sizeof (struct node));
+    root->type = DIR_NODE;
+    root->shortname = "/";
+//    root->number_sibling = 0;
+    root->sibling = malloc(sizeof (struct node));
+    root->child = malloc(sizeof (struct node));
 }
