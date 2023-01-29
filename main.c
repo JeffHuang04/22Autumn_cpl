@@ -5,9 +5,14 @@
 int main() {
     init_ramfs();
     assert(rmkdir("/dir") == 0);
+    assert(rrmdir("/dir") == 0);
+    assert(rmkdir("/dir") == 0);
+    assert(rmkdir("/dir/a") == 0);
+    assert(rmkdir("/dir/a/b") == 0);
+    assert(rrmdir("/dir") == -1);
     assert(rmkdir("//dir") == -1);
-    assert(rmkdir("//dir/a") == 0);
-    assert(rmkdir("//dir/a/b") == 0);
+    assert(rmkdir("//dir/a") == -1);
+    assert(rmkdir("//dir/a/b") == -1);
     assert(rmkdir("/a/b") == -1);
     int fd;
     assert((fd = ropen("//dir///////1.txt", O_CREAT | O_RDWR)) >= 0);
