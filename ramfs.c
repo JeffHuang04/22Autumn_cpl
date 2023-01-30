@@ -387,6 +387,11 @@ int rrmdir(const char *pathname) {
     node *temp;//暂存需要free的目录
     for (int i = 0; i <= index; i++) {
         if (i == index) {
+            if(temp_instruction->type == FILE_NODE){
+                free(temp_string);
+                free(str);
+                return -1;
+            }
             if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                         temp = temp_instruction_up->child;
@@ -434,12 +439,21 @@ int rrmdir(const char *pathname) {
                 if (i == index - 1) {
                     temp_instruction = instruction;
                 }
-                if (index >= 2) {
-                    if (i == index - 2) {
+//                if (i == index - 2) {
+//                    if (index >= 2) {
+//                        if (i == index - 2) {
+//                            temp_instruction_up = instruction;
+//                        }
+//                    } else {
+//                        temp_instruction_up = root;
+//                    }
+//                }
+                if(i == index - 2) {
+                    if (index >= 2) {
                         temp_instruction_up = instruction;
+                    } else {
+                        temp_instruction_up = root;
                     }
-                } else {
-                    temp_instruction_up = root;
                 }
                 instruction = instruction->child;
                 break;
@@ -477,6 +491,11 @@ int runlink(const char *pathname) {
     node *temp;
     for (int i = 0; i <= index; i++) {
         if (i == index) {
+            if(temp_instruction->type == DIR_NODE){
+                free(temp_string);
+                free(str);
+                return -1;
+            }
             if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                         temp = temp_instruction_up->child;
@@ -528,12 +547,19 @@ int runlink(const char *pathname) {
                 if (i == index - 1) {
                     temp_instruction = instruction;
                 }
-                if (index >= 2) {
-                    if (i == index - 2) {
+//                if (index >= 2) {
+//                    if (i == index - 2) {
+//                        temp_instruction_up = instruction;
+//                    }
+//                } else {
+//                    temp_instruction_up = root;
+//                }
+                if(i == index - 2) {
+                    if (index >= 2) {
                         temp_instruction_up = instruction;
+                    } else {
+                        temp_instruction_up = root;
                     }
-                } else {
-                    temp_instruction_up = root;
                 }
                 instruction = instruction->child;
                 break;
