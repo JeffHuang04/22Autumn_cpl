@@ -202,7 +202,7 @@ int ropen(const char *pathname, int flags) {
         filed[index_fd].flags = flags;
         filed[index_fd].type = file;
         filed[index_fd].fileordir = instruction;
-        if ((flags & 02000) == 0) {//判断不进行追加
+        if ((flags & 0b10000000000) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
@@ -218,7 +218,7 @@ int ropen(const char *pathname, int flags) {
             filed[index_fd].readable = 0;
             filed[index_fd].writable = 1;
         }
-        if ((flags & 01000) == 0 && filed[index_fd].writable == 1) {
+        if ((flags & 0b1000000000) != 0 && filed[index_fd].writable == 1) {
             void *temp_content = instruction->content;
             instruction->content = NULL;
             free(temp_content);
