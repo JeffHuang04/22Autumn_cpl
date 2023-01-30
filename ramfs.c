@@ -125,6 +125,11 @@ int ropen(const char *pathname, int flags) {
     } else {//判断要创建文件（与创建目录大同小异）
             for (int i = 0; i <= index - 1; i++) {
                 if (i == index - 1) {
+                    if(instruction_temp->type == FILE_NODE) {
+                        free(temp_string);
+                        free(str);
+                        return -1;
+                    }
                     if (instruction != NULL) {
                         int flag_file = 0;
                         for (;;) {
@@ -315,6 +320,11 @@ int rmkdir(const char *pathname) {
     node *instruction_temp = root;
     for (int i = 0; i <= index - 1; i++) {
         if (i == index - 1) {
+            if(instruction_temp->type == FILE_NODE) {
+                free(temp_string);
+                free(str);
+                return -1;
+            }
             if (instruction != NULL) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
@@ -383,7 +393,7 @@ int rrmdir(const char *pathname) {
     }
     node *instruction = root->child;
     node *temp_instruction;//要删除的目录
-    node *temp_instruction_up;//要删除的上一级目录
+    node *temp_instruction_up ;//要删除的上一级目录
     node *temp;//暂存需要free的目录
     for (int i = 0; i <= index; i++) {
         if (i == index) {
@@ -405,7 +415,7 @@ int rrmdir(const char *pathname) {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
                     for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1])) {
+                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0) {
                             break;
                         }
                         temp_nextup = temp_nextup->sibling;
@@ -436,23 +446,15 @@ int rrmdir(const char *pathname) {
         }
         for (;;) {
             if (strcmp(str[i], instruction->shortname) == 0) {
-                if (i == index - 1) {
+                if(index == 1){
                     temp_instruction = instruction;
-                }
-//                if (i == index - 2) {
-//                    if (index >= 2) {
-//                        if (i == index - 2) {
-//                            temp_instruction_up = instruction;
-//                        }
-//                    } else {
-//                        temp_instruction_up = root;
-//                    }
-//                }
-                if(i == index - 2) {
-                    if (index >= 2) {
+                    temp_instruction_up = root;
+                }else {
+                    if (i == index - 1) {
+                        temp_instruction = instruction;
+                    }
+                    if (i == index - 2) {
                         temp_instruction_up = instruction;
-                    } else {
-                        temp_instruction_up = root;
                     }
                 }
                 instruction = instruction->child;
@@ -511,7 +513,7 @@ int runlink(const char *pathname) {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
                     for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1])) {
+                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0) {
                             break;
                         }
                         temp_nextup = temp_nextup->sibling;
@@ -544,21 +546,15 @@ int runlink(const char *pathname) {
         }
         for (;;) {
             if (strcmp(str[i], instruction->shortname) == 0) {
-                if (i == index - 1) {
+                if(index == 1){
                     temp_instruction = instruction;
-                }
-//                if (index >= 2) {
-//                    if (i == index - 2) {
-//                        temp_instruction_up = instruction;
-//                    }
-//                } else {
-//                    temp_instruction_up = root;
-//                }
-                if(i == index - 2) {
-                    if (index >= 2) {
+                    temp_instruction_up = root;
+                }else {
+                    if (i == index - 1) {
+                        temp_instruction = instruction;
+                    }
+                    if (i == index - 2) {
                         temp_instruction_up = instruction;
-                    } else {
-                        temp_instruction_up = root;
                     }
                 }
                 instruction = instruction->child;
