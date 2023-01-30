@@ -92,7 +92,7 @@ int ropen(const char *pathname, int flags) {
                     return -1;
                 }
                 for (;;) {
-                    if (strcmp(instruction->shortname, str[i])) {
+                    if (strcmp(instruction->shortname, str[i]) == 0) {
                         break;
                     }
                     if (instruction->sibling == NULL) {
@@ -102,6 +102,7 @@ int ropen(const char *pathname, int flags) {
                     }
                     instruction = instruction->sibling;
                 }
+                break;
             }
             if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
                 free(temp_string);
