@@ -15,7 +15,7 @@ typedef struct node {
     } type;
     struct node *child;
     struct node *sibling;
-    void *contnet;
+    void *content;
     int size;
     char *shortname;
 } node;
@@ -202,7 +202,7 @@ int ropen(const char *pathname, int flags) {
         filed[index_fd].flags = flags;
         filed[index_fd].type = file;
         filed[index_fd].fileordir = instruction;
-        if ((flags & 0b10000000000) == 0) {//判断不进行追加
+        if ((flags & 02000) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
@@ -218,9 +218,12 @@ int ropen(const char *pathname, int flags) {
             filed[index_fd].readable = 0;
             filed[index_fd].writable = 1;
         }
-        if ((flags & 0b1000000000) != 0 && filed[index_fd].writable == 1) {
-            free(instruction->contnet);
+        if ((flags & 01000) == 0 && filed[index_fd].writable == 1) {
+            void *temp_content = instruction->content;
+            instruction->content = NULL;
+            free(temp_content);
             filed[index_fd].offset = 0;
+            instruction->size = 0;
         }
     }
     free(temp_string);
@@ -254,22 +257,22 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
         return -1;
     }
     if (filed[fd].fileordir->size == 0) {
-        filed[fd].fileordir->contnet = malloc(1);
+        filed[fd].fileordir->content = malloc(1);
     }
     if (filed[fd].offset > filed[fd].fileordir->size) {
-        void *temp = realloc(filed[fd].fileordir->contnet, filed[fd].offset);
-        filed[fd].fileordir->contnet = temp;
+        void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset);
+        filed[fd].fileordir->content = temp;
         for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
-            memcpy(filed[fd].fileordir->contnet + i, "\0", 1);
+            memcpy(filed[fd].fileordir->content + i, "\0", 1);
         }
     }
     int need_size = filed[fd].offset + count;
     if (need_size > filed[fd].fileordir->size) {
-        void *temp = realloc(filed[fd].fileordir->contnet, need_size);
-        filed[fd].fileordir->contnet = temp;
+        void *temp = realloc(filed[fd].fileordir->content, need_size);
+        filed[fd].fileordir->content = temp;
         filed[fd].fileordir->size = need_size;
     }
-    memcpy((filed[fd].fileordir->contnet + filed[fd].offset), buf, count);
+    memcpy((filed[fd].fileordir->content + filed[fd].offset), buf, count);
     filed[fd].offset = filed[fd].offset + count;
     return count;
 }
@@ -284,7 +287,7 @@ ssize_t rread(int fd, void *buf, size_t count) {
     } else {
         need = count;
     }
-    memcpy(buf, filed[fd].fileordir->contnet + filed[fd].offset, need);
+    memcpy(buf, filed[fd].fileordir->content + filed[fd].offset, need);
     filed[fd].offset = filed[fd].offset + need;
     return need;
 }
@@ -502,12 +505,12 @@ int runlink(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                         temp = temp_instruction_up->child;
                         temp_instruction_up->child = NULL;
-                        free(temp->contnet);
+                        free(temp->content);
                         free(temp);
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
-                    free(temp->contnet);
+                    free(temp->content);
                     free(temp);
                 } else {
                     node *temp_nextup;
@@ -521,12 +524,12 @@ int runlink(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
-                        free(temp->contnet);
+                        free(temp->content);
                         free(temp);
                     } else {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
-                        free(temp->contnet);
+                        free(temp->content);
                         free(temp);
                     }
                 }
