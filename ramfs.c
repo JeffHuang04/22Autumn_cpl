@@ -38,41 +38,26 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
     int lengthofroad = strlen(pathname);
     if (*pathname == '/' && lengthofroad <= length_road) {
         int index = 0;
-        char *temp = malloc(length_name + 3);
-        temp = strtok(temp_string, "/");
+        char *temp = strtok(temp_string, "/");
         while (temp != NULL) {
             if (strlen(temp) > length_name) {
-                free(temp);
                 str = NULL;
                 return 0;
             }
             str[index] = temp;
-            temp = strtok(NULL, "/");
-            index++;
-        }
-        if (index >= 2) {
-            for (int i = 0; i <= index - 2; i++) {
-                int count_ = strlen((str[i]));
-                if (count_ >= 4
-                    && str[i][count_ - 1] == 't'
-                    && str[i][count_ - 2] == 'x'
-                    && str[i][count_ - 3] == 't'
-                    && str[i][count_ - 4] == '.') {
-                    free(temp);
+            int length = strlen(str[index]);
+            for (int i = 0; i <= length - 1 ; i++) {
+                if(*(str[index]+i) == 46 || (*(str[index]+i)>= '0' && *(str[index]+i) <= '9' ) ||
+                        (*(str[index]+i)>= 'a' && *(str[index]+i) <= 'z' )||
+                        (*(str[index]+i)>= 'A' && *(str[index]+i) <= 'Z' )){
+
+                } else {
                     return 0;
                 }
             }
+            temp = strtok(NULL, "/");
+            index++;
         }
-        int count = strlen(str[index - 1]);
-        if (pathname[lengthofroad - 1] == '/' && count >= 4
-            && str[index - 1][count - 1] == 't'
-            && str[index - 1][count - 2] == 'x'
-            && str[index - 1][count - 3] == 't' && str[index - 1][count - 4] == '.') {
-            free(temp);
-            str = NULL;
-            return 0;
-        }
-        free(temp);
         return index;
     } else {
         str = NULL;
@@ -86,6 +71,14 @@ int ropen(const char *pathname, int flags) {
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
     if (index == 0) {
+        free(temp_string);
+        free(str);
+        return -1;
+    }
+    int length_pathname = strlen(pathname);
+    if(pathname[length_pathname - 1] == '/') {
+        free(temp_string);
+        free(str);
         return -1;
     }
     node *instruction = root->child;
@@ -129,18 +122,15 @@ int ropen(const char *pathname, int flags) {
             }
         }
     } else {//判断要创建文件（与创建目录大同小异）
-        int count = strlen(str[index - 1]);
-        if (count >= 4 && str[index - 1][count - 1] == 't' && str[index - 1][count - 2] == 'x'
-            && str[index - 1][count - 3] == 't' && str[index - 1][count - 4] == '.') {
             for (int i = 0; i <= index - 1; i++) {
                 if (i == index - 1) {
                     if (instruction != NULL) {
+                        int flag_file = 0;
                         for (;;) {
                             //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
                             if (strcmp(str[i], instruction->shortname) == 0) {
-                                free(temp_string);
-                                free(str);
-                                return -1;
+                                flag_file = 1;
+                                break;
                             }
                             //}
                             if (instruction->sibling == NULL) {//（之后循环退出的条件）
@@ -148,6 +138,9 @@ int ropen(const char *pathname, int flags) {
                             }
                             instruction = instruction->sibling;
                         }//检查有没有重名的
+                        if(flag_file == 1){
+                            break;
+                        }
                         instruction->sibling = malloc(sizeof(struct node));
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
@@ -187,11 +180,6 @@ int ropen(const char *pathname, int flags) {
                     instruction = instruction->sibling;
                 }
             }
-        } else {
-            free(temp_string);
-            free(str);
-            return -1;
-        }
     }
     int index_fd = 0;
     for (int i = 0; i <= max_fd - 1; i++) {
@@ -235,6 +223,9 @@ int ropen(const char *pathname, int flags) {
 }
 
 int rclose(int fd) {
+    if(fd < 0 || fd >= 4096){
+        return -1;
+    }
     if (filed[fd].use == true) {
         filed[fd].use = false;
         filed[fd].fileordir = NULL;
@@ -250,6 +241,9 @@ int rclose(int fd) {
 }
 
 ssize_t rwrite(int fd, const void *buf, size_t count) {
+    if(fd < 0 || fd >= 4096){
+        return -1;
+    }
     if (filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
@@ -270,7 +264,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
         filed[fd].fileordir->size = need_size;
     }
     memcpy((filed[fd].fileordir->contnet + filed[fd].offset), buf, count);
-    filed[fd].offset = count;
+    filed[fd].offset = filed[fd].offset + count;
     return count;
 }
 
@@ -285,10 +279,14 @@ ssize_t rread(int fd, void *buf, size_t count) {
         need = count;
     }
     memcpy(buf, filed[fd].fileordir->contnet + filed[fd].offset, need);
+    filed[fd].offset = filed[fd].offset + need;
     return need;
 }
 
 off_t rseek(int fd, off_t offset, int whence) {
+    if(fd < 0 || fd >= 4096){
+        return -1;
+    }
     if (whence == SEEK_SET) {
         filed[fd].offset = offset;
     } else if (whence == SEEK_CUR) {
@@ -312,13 +310,6 @@ int rmkdir(const char *pathname) {
         free(str);
         return -1;
     }
-    int count = strlen(str[index - 1]);
-    if (count >= 4 && str[index - 1][count - 1] == 't' && str[index - 1][count - 2] == 'x'
-        && str[index - 1][count - 3] == 't' && str[index - 1][count - 4] == '.') {
-        free(temp_string);
-        free(str);
-        return -1;
-    }//判断最后类型是目录
     node *instruction = root->child;//从头遍历链表
     node *instruction_temp = root;
     for (int i = 0; i <= index - 1; i++) {
@@ -389,13 +380,6 @@ int rrmdir(const char *pathname) {
     if (index == 0) {
         return -1;
     }
-    int count = strlen(str[index - 1]);
-    if (count >= 4 && str[index - 1][count - 1] == 't' && str[index - 1][count - 2] == 'x'
-        && str[index - 1][count - 3] == 't' && str[index - 1][count - 4] == '.') {
-        free(temp_string);
-        free(str);
-        return -1;
-    }//判断最后类型是目录
     node *instruction = root->child;
     node *temp_instruction;//要删除的目录
     node *temp_instruction_up;//要删除的上一级目录
@@ -475,11 +459,12 @@ int runlink(const char *pathname) {
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
     if (index == 0) {
+        free(temp_string);
+        free(str);
         return -1;
     }
-    int count = strlen(str[index - 1]);
-    if (count < 4 || str[index - 1][count - 1] == 't' || str[index - 1][count - 2] == 'x'
-        || str[index - 1][count - 3] == 't' || str[index - 1][count - 4] == '.') {
+    int length_pathname = strlen(pathname);
+    if(pathname[length_pathname - 1] == '/') {
         free(temp_string);
         free(str);
         return -1;
