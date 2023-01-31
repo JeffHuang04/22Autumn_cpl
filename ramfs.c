@@ -404,7 +404,7 @@ int rmkdir(const char *pathname) {
     }
 }
 
-int rrmdir(const char *pathname) {
+/*int rrmdir(const char *pathname) {
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
@@ -594,7 +594,7 @@ int runlink(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
-}
+}*/
 
 void init_ramfs() {
     root = malloc(sizeof(struct node));
