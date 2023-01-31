@@ -41,7 +41,7 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
         while (temp != NULL) {
             if (strlen(temp) > length_name) {
         //        str = NULL;
-                return 0;
+                return -1;
             }
             str[index] = temp;
             int length = strlen(str[index]);
@@ -51,7 +51,7 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
                         (*(str[index]+i) >= 'A' && *(str[index]+i) <= 'Z' )){
 
                 } else {
-                    return 0;
+                    return -1;
                 }
             }
             temp = strtok(NULL, "/");
@@ -60,7 +60,7 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
         return index;
     } else {
     //    str = NULL;
-        return 0;
+        return -1;
     }
 }//没问题
 
@@ -69,62 +69,66 @@ int ropen(const char *pathname, int flags) {
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
-    if (index == 0) {
+    node *instruction = root->child;
+    node *instruction_temp = root;
+    bool ifroot = false;
+    if (index == -1 ) {
         free(temp_string);
         free(str);
         return -1;
+    } else if(index == 0) {
+        instruction = root;
+        ifroot = true;
     }
-    int length_pathname = strlen(pathname);
-    node *instruction = root->child;
-    node *instruction_temp = root;
-    if ((flags & O_CREAT) == 0) {//判断不用创建文件
-        for (int i = 0; i <= index - 1; i++) {
-            if (i == index - 1) {
-                if (instruction == NULL) {//最低层目录为空
+    if(ifroot == false) {
+        if ((flags & O_CREAT) == 0) {//判断不用创建文件只需查找
+            for (int i = 0; i <= index - 1; i++) {
+                if (i == index - 1) {
+                    if (instruction == NULL) {//最低层目录为空
+                        free(temp_string);
+                        free(str);
+                        return -1;
+                    }
+                    for (;;) {
+                        if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
+                            break;
+                        }
+                        if (instruction->sibling == NULL) {
+                            free(temp_string);
+                            free(str);
+                            return -1;
+                        }
+                        instruction = instruction->sibling;
+                    }
+                    break;
+                }
+                if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
                     free(temp_string);
                     free(str);
                     return -1;
                 }
                 for (;;) {
-                    if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
+                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+                        //instruction_temp = instruction;
+                        instruction = instruction->child;
                         break;
                     }
-                    if (instruction->sibling == NULL) {
+                    if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
                         free(temp_string);
                         free(str);
                         return -1;
                     }
                     instruction = instruction->sibling;
                 }
-                break;
             }
-            if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
-                free(temp_string);
-                free(str);
-                return -1;
-            }
-            for (;;) {
-                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-                    instruction_temp = instruction;
-                    instruction = instruction->child;
-                    break;
-                }
-                if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                    free(temp_string);
-                    free(str);
-                    return -1;
-                }
-                instruction = instruction->sibling;
-            }
-        }
-    } else {//判断要创建文件（与创建目录大同小异）
+        } else {//判断要创建文件、打开文件、打开目录
             for (int i = 0; i <= index - 1; i++) {
                 if (i == index - 1) {
-                    if(instruction_temp->type == FILE_NODE) {
-                        free(temp_string);
-                        free(str);
-                        return -1;
-                    }
+//                    if (instruction_temp->type == FILE_NODE) {
+//                        free(temp_string);
+//                        free(str);
+//                        return -1;
+//                    }
                     if (instruction != NULL) {
                         int flag_file = 0;
                         for (;;) {
@@ -139,7 +143,7 @@ int ropen(const char *pathname, int flags) {
                             }
                             instruction = instruction->sibling;
                         }//检查有没有重名的
-                        if(flag_file == 1){
+                        if (flag_file == 1) {
                             break;
                         }
                         instruction->sibling = malloc(sizeof(struct node));
@@ -183,11 +187,13 @@ int ropen(const char *pathname, int flags) {
                     instruction = instruction->sibling;
                 }
             }
-    }
-    if(pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-        free(temp_string);
-        free(str);
-        return -1;
+        }
+        int length_pathname = strlen(pathname);
+        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+            free(temp_string);
+            free(str);
+            return -1;
+        }
     }
     int index_fd = 0;
     for (int i = 0; i <= max_fd - 1; i++) {
@@ -209,7 +215,7 @@ int ropen(const char *pathname, int flags) {
         } else {
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
         }
-        if ((flags & 1) == 0) {//判断可读
+        if ((flags & 0b1) == 0) {//判断可读
             filed[index_fd].readable = 1;
             if ((flags & 0b10) == 0) {
                 filed[index_fd].writable = 0;
@@ -220,7 +226,7 @@ int ropen(const char *pathname, int flags) {
             filed[index_fd].readable = 0;
             filed[index_fd].writable = 1;
         }
-        if ((flags & 01000) != 0 && filed[index_fd].writable == 1) {
+        if ((flags & 01000) != 0 && filed[index_fd].writable == 1) {//清空
             void *temp_content = instruction->content;
             instruction->content = NULL;
             free(temp_content);
@@ -304,16 +310,18 @@ off_t rseek(int fd, off_t offset, int whence) {
     if(filed[fd].use == false){
         return -1;
     }
+    int temp_offset = 0;
     if (whence == SEEK_SET) {
-        filed[fd].offset = offset;
+        temp_offset = offset;
     } else if (whence == SEEK_CUR) {
-        filed[fd].offset = filed[fd].offset + offset;
-    } else {
-        filed[fd].offset = filed[fd].fileordir->size + offset;
+        temp_offset = filed[fd].offset + offset;
+    } else if(whence == SEEK_END){
+        temp_offset = filed[fd].fileordir->size + offset;
     }
-    if (filed[fd].offset < 0) {
+    if (temp_offset < 0) {
         return -1;
     }
+    filed[fd].offset = temp_offset;
     return filed[fd].offset;
 }
 
@@ -322,7 +330,7 @@ int rmkdir(const char *pathname) {
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
-    if (/*str == NULL*/index == 0) {
+    if (/*str == NULL*/index == 0 || index == -1) {
         free(temp_string);
         free(str);
         return -1;
@@ -401,7 +409,7 @@ int rrmdir(const char *pathname) {
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
-    if (index == 0) {
+    if (index == 0 || index == -1) {
         return -1;
     }
     node *instruction = root->child;
@@ -488,7 +496,7 @@ int runlink(const char *pathname) {
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
     int index = pathname_simple(str, temp_string, pathname);
-    if (index == 0) {
+    if (index == 0 || index == -1) {
         free(temp_string);
         free(str);
         return -1;
