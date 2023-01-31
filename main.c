@@ -7,6 +7,15 @@ int main() {
     assert(rmkdir("/dir") == 0);
     assert(rmkdir("//dir") == -1);
     assert(rmkdir("/a/b") == -1);
+    assert(ropen("/dir",0) == 0);
+    assert(ropen("/dir/a",O_CREAT));
+    assert(ropen("/dir/a/",O_CREAT) == -1);
+    assert(ropen("/dir/a/b",O_CREAT) == -1);
+    assert(ropen("/dir/b/c",O_CREAT) == -1);
+    assert(ropen("/dir/b",O_CREAT) );
+    assert(rmkdir("/dir/b") == 0);
+    assert(ropen("/a",O_CREAT)==3);
+
     int fd;
     assert((fd = ropen("//dir///////1.txt", O_CREAT | O_RDWR)) >= 0);
     assert(rwrite(fd, "hello", 5) == 5);

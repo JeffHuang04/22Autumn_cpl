@@ -347,7 +347,7 @@ int rmkdir(const char *pathname) {
             if (instruction != NULL) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+                    if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
                         free(temp_string);
                         free(str);
                         return -1;
@@ -404,7 +404,7 @@ int rmkdir(const char *pathname) {
     }
 }
 
-/*int rrmdir(const char *pathname) {
+int rrmdir(const char *pathname) {
     char *temp_string = malloc(length_road + 1);
     strcpy(temp_string, pathname);
     char **str = malloc(length_road + 1);
@@ -594,7 +594,7 @@ int runlink(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
-}*/
+}
 
 void init_ramfs() {
     root = malloc(sizeof(struct node));
