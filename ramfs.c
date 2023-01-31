@@ -5,7 +5,6 @@
 #include <stdbool.h>
 
 #define max_fd 4096
-#define max_fileanddir 65536
 #define length_name 32
 #define length_road 1024
 typedef struct node {
@@ -27,12 +26,12 @@ typedef struct filedesc {
         dir = 2,
     } type;
     int offset;
-    int flags;
+    //int flags;
     int writable;
     int readable;
     node *fileordir;
 } filedesc;
-filedesc filed[max_fd];
+filedesc filed[max_fd + 3];
 
 int pathname_simple(char **str, char *temp_string, const char *pathname) {
     int lengthofroad = strlen(pathname);
@@ -41,15 +40,15 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
         char *temp = strtok(temp_string, "/");
         while (temp != NULL) {
             if (strlen(temp) > length_name) {
-                str = NULL;
+        //        str = NULL;
                 return 0;
             }
             str[index] = temp;
             int length = strlen(str[index]);
             for (int i = 0; i <= length - 1 ; i++) {
-                if(*(str[index]+i) == 46 || (*(str[index]+i)>= '0' && *(str[index]+i) <= '9' ) ||
-                        (*(str[index]+i)>= 'a' && *(str[index]+i) <= 'z' )||
-                        (*(str[index]+i)>= 'A' && *(str[index]+i) <= 'Z' )){
+                if(*(str[index]+i) == 46 || (*(str[index]+i) >= '0' && *(str[index]+i) <= '9' ) ||
+                        (*(str[index]+i) >= 'a' && *(str[index]+i) <= 'z' )||
+                        (*(str[index]+i) >= 'A' && *(str[index]+i) <= 'Z' )){
 
                 } else {
                     return 0;
@@ -60,7 +59,7 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
         }
         return index;
     } else {
-        str = NULL;
+    //    str = NULL;
         return 0;
     }
 }
@@ -83,7 +82,7 @@ int ropen(const char *pathname, int flags) {
     }
     node *instruction = root->child;
     node *instruction_temp = root;
-    if ((flags & 0b1000000) == 0) {//判断不用创建文件
+    if ((flags & O_CREAT) == 0) {//判断不用创建文件
         for (int i = 0; i <= index - 1; i++) {
             if (i == index - 1) {
                 if (instruction == NULL) {//最低层目录为空
@@ -92,7 +91,7 @@ int ropen(const char *pathname, int flags) {
                     return -1;
                 }
                 for (;;) {
-                    if (strcmp(instruction->shortname, str[i]) == 0) {
+                    if (strcmp(instruction->shortname, str[i]) == 0 && instruction->type == FILE_NODE) {
                         break;
                     }
                     if (instruction->sibling == NULL) {
@@ -111,6 +110,7 @@ int ropen(const char *pathname, int flags) {
             }
             for (;;) {
                 if (strcmp(str[i], instruction->shortname) == 0) {
+                    instruction_temp = instruction;
                     instruction = instruction->child;
                     break;
                 }
@@ -134,7 +134,7 @@ int ropen(const char *pathname, int flags) {
                         int flag_file = 0;
                         for (;;) {
                             //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                            if (strcmp(str[i], instruction->shortname) == 0) {
+                            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
                                 flag_file = 1;
                                 break;
                             }
@@ -149,6 +149,7 @@ int ropen(const char *pathname, int flags) {
                         }
                         instruction->sibling = malloc(sizeof(struct node));
                         instruction->sibling->sibling = NULL;
+                        instruction->sibling->child = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
@@ -158,6 +159,7 @@ int ropen(const char *pathname, int flags) {
                         instruction_temp->child = malloc(sizeof(struct node));
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
+                        instruction->child = NULL;
                         instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
@@ -199,10 +201,10 @@ int ropen(const char *pathname, int flags) {
         filed[index_fd].fileordir = instruction;
         filed[index_fd].type = dir;
     } else if (instruction->type == FILE_NODE) {
-        filed[index_fd].flags = flags;
+        //filed[index_fd].flags = flags;
         filed[index_fd].type = file;
         filed[index_fd].fileordir = instruction;
-        if ((flags & 0b10000000000) == 0) {//判断不进行追加
+        if ((flags & 02000) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
@@ -218,7 +220,7 @@ int ropen(const char *pathname, int flags) {
             filed[index_fd].readable = 0;
             filed[index_fd].writable = 1;
         }
-        if ((flags & 0b1000000000) != 0 && filed[index_fd].writable == 1) {
+        if ((flags & 01000) != 0 && filed[index_fd].writable == 1) {
             void *temp_content = instruction->content;
             instruction->content = NULL;
             free(temp_content);
@@ -232,7 +234,7 @@ int ropen(const char *pathname, int flags) {
 }
 
 int rclose(int fd) {
-    if(fd < 0 || fd >= 4096){
+    if(fd < 0 || fd >= max_fd){
         return -1;
     }
     if (filed[fd].use == true) {
@@ -242,7 +244,7 @@ int rclose(int fd) {
         filed[fd].readable = 0;
         filed[fd].offset = 0;
         filed[fd].type = 0;
-        filed[fd].flags = 0;
+        //filed[fd].flags = 0;
         return 0;
     } else {
         return -1;
@@ -250,7 +252,7 @@ int rclose(int fd) {
 }
 
 ssize_t rwrite(int fd, const void *buf, size_t count) {
-    if(fd < 0 || fd >= 4096){
+    if(fd < 0 || fd >= max_fd){
         return -1;
     }
     if (filed[fd].writable == 0 || filed[fd].type == dir) {
@@ -281,7 +283,7 @@ ssize_t rread(int fd, void *buf, size_t count) {
     if (filed[fd].readable == 0 || filed[fd].type == dir) {
         return -1;
     }
-    size_t need = 0;
+    size_t need;
     if (filed[fd].offset + count > filed[fd].fileordir->size) {
         need = filed[fd].fileordir->size - filed[fd].offset;
     } else {
@@ -331,7 +333,7 @@ int rmkdir(const char *pathname) {
             if (instruction != NULL) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                    if (strcmp(str[i], instruction->shortname) == 0) {
+                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
                         free(temp_string);
                         free(str);
                         return -1;
@@ -344,6 +346,7 @@ int rmkdir(const char *pathname) {
                 }//检查有没有重名的
                 instruction->sibling = malloc(sizeof(struct node));
                 instruction->sibling->sibling = NULL;
+                instruction->sibling->child = NULL;
                 instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
@@ -354,6 +357,7 @@ int rmkdir(const char *pathname) {
                 instruction_temp->child = malloc(sizeof(struct node));
                 instruction = instruction_temp->child;
                 instruction->sibling = NULL;
+                instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;

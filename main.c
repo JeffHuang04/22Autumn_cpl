@@ -77,6 +77,7 @@ void seekall(int off, int whence, int expect) {
 
 int main() {
     init_ramfs();
+    assert(rrmdir("/") == -1);
     openall_succ(O_CREAT | O_RDWR | O_WRONLY);  // can't read
     readall(5, -1);
     for (int i = 0; i < 26; i++) {
