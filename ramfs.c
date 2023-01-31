@@ -416,8 +416,8 @@ int rrmdir(const char *pathname) {
         return -1;
     }
     node *instruction = root->child;
-    node *temp_instruction;//要删除的目录
-    node *temp_instruction_up ;//要删除的上一级目录
+    node *temp_instruction = root->child;//要删除的目录
+    node *temp_instruction_up = root;//要删除的上一级目录
     node *temp;//暂存需要free的目录
     for (int i = 0; i <= index; i++) {
         if (i == index) {
@@ -512,8 +512,8 @@ int runlink(const char *pathname) {
     }
     node *instruction;
     instruction = root->child;
-    node *temp_instruction;
-    node *temp_instruction_up;//上一级目录
+    node *temp_instruction = root->child;
+    node *temp_instruction_up = root;//上一级目录
     node *temp;
     for (int i = 0; i <= index; i++) {
         if (i == index) {
