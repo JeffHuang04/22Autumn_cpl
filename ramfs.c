@@ -342,11 +342,6 @@ int rmkdir(const char *pathname) {
     node *instruction_temp = root;
     for (int i = 0; i <= index - 1; i++) {
         if (i == index - 1) {
-            if(instruction_temp->type == FILE_NODE) {
-                free(temp_string);
-                free(str);
-                return -1;
-            }
             if (instruction != NULL) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
