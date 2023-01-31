@@ -293,7 +293,7 @@ ssize_t rread(int fd, void *buf, size_t count) {
         return -1;
     }
     int need = 0;//如果是负值会如何
-    if ((int )filed[fd].offset + count > filed[fd].fileordir->size) {
+    if ((int )(filed[fd].offset + count) > filed[fd].fileordir->size) {
         need = filed[fd].fileordir->size - filed[fd].offset;
     } else {
         need = count;
