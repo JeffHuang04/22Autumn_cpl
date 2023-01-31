@@ -267,15 +267,15 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if (filed[fd].fileordir->content == NULL && count > 0 ) {
         filed[fd].fileordir->content = malloc(1);
     }
-    if (filed[fd].offset > filed[fd].fileordir->size) {
-        void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset);
-        filed[fd].fileordir->content = temp;
-        for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
-            memcpy(filed[fd].fileordir->content + i, "\0", 1);
-        }
-    }
     int need_size = filed[fd].offset + count;
     if (need_size > filed[fd].fileordir->size) {
+        if (filed[fd].offset > filed[fd].fileordir->size) {
+            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset);
+            filed[fd].fileordir->content = temp;
+            for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
+                memcpy(filed[fd].fileordir->content + i, "\0", 1);
+            }
+        }
         void *temp = realloc(filed[fd].fileordir->content, need_size);
         filed[fd].fileordir->content = temp;
         filed[fd].fileordir->size = need_size;
