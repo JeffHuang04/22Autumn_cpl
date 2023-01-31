@@ -292,11 +292,14 @@ ssize_t rread(int fd, void *buf, size_t count) {
     if(filed[fd].fileordir->content == NULL) {
         return -1;
     }
-    size_t need;
+    int need = 0;//如果是负值会如何
     if (filed[fd].offset + count > filed[fd].fileordir->size) {
         need = filed[fd].fileordir->size - filed[fd].offset;
     } else {
         need = count;
+    }
+    if (need < 0) {
+        return -1;
     }
     memcpy(buf, filed[fd].fileordir->content + filed[fd].offset, need);
     filed[fd].offset = filed[fd].offset + need;
