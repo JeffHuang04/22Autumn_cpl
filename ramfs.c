@@ -91,7 +91,7 @@ int ropen(const char *pathname, int flags) {
                     return -1;
                 }
                 for (;;) {
-                    if (strcmp(instruction->shortname, str[i]) == 0 && instruction->type == FILE_NODE) {
+                    if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
                         break;
                     }
                     if (instruction->sibling == NULL) {
@@ -134,7 +134,7 @@ int ropen(const char *pathname, int flags) {
                         int flag_file = 0;
                         for (;;) {
                             //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
+                            if (strcmp(str[i], instruction->shortname) == 0/* && instruction->type == FILE_NODE*/) {
                                 flag_file = 1;
                                 break;
                             }
@@ -258,7 +258,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if (filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
-    if (filed[fd].fileordir->size == 0) {
+    if (filed[fd].fileordir->content == NULL && count > 0 ) {
         filed[fd].fileordir->content = malloc(1);
     }
     if (filed[fd].offset > filed[fd].fileordir->size) {
@@ -425,7 +425,7 @@ int rrmdir(const char *pathname) {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
                     for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0) {
+                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == DIR_NODE) {
                             break;
                         }
                         temp_nextup = temp_nextup->sibling;
@@ -523,7 +523,7 @@ int runlink(const char *pathname) {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
                     for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0) {
+                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == FILE_NODE) {
                             break;
                         }
                         temp_nextup = temp_nextup->sibling;
