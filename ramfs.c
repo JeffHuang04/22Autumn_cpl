@@ -301,6 +301,9 @@ off_t rseek(int fd, off_t offset, int whence) {
     if(fd < 0 || fd >= 4096){
         return -1;
     }
+    if(filed[fd].use == false){
+        return -1;
+    }
     if (whence == SEEK_SET) {
         filed[fd].offset = offset;
     } else if (whence == SEEK_CUR) {
