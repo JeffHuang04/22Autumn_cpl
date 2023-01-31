@@ -62,7 +62,7 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
     //    str = NULL;
         return 0;
     }
-}
+}//没问题
 
 int ropen(const char *pathname, int flags) {
     char *temp_string = malloc(length_road + 1);
@@ -75,11 +75,6 @@ int ropen(const char *pathname, int flags) {
         return -1;
     }
     int length_pathname = strlen(pathname);
-    if(pathname[length_pathname - 1] == '/') {
-        free(temp_string);
-        free(str);
-        return -1;
-    }
     node *instruction = root->child;
     node *instruction_temp = root;
     if ((flags & O_CREAT) == 0) {//判断不用创建文件
@@ -188,6 +183,11 @@ int ropen(const char *pathname, int flags) {
                     instruction = instruction->sibling;
                 }
             }
+    }
+    if(pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+        free(temp_string);
+        free(str);
+        return -1;
     }
     int index_fd = 0;
     for (int i = 0; i <= max_fd - 1; i++) {
@@ -591,7 +591,10 @@ int runlink(const char *pathname) {
 void init_ramfs() {
     root = malloc(sizeof(struct node));
     root->type = DIR_NODE;
-    root->shortname = "/";
+    root->shortname = malloc(2);
+    strcpy(root->shortname,"/");
     root->sibling = NULL;
     root->child = NULL;//malloc(sizeof(struct node));
+    root->content = NULL;
+    root->size = 0;
 }
