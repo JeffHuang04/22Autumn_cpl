@@ -109,7 +109,7 @@ int ropen(const char *pathname, int flags) {
                 return -1;
             }
             for (;;) {
-                if (strcmp(str[i], instruction->shortname) == 0) {
+                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
                     instruction_temp = instruction;
                     instruction = instruction->child;
                     break;
@@ -172,7 +172,7 @@ int ropen(const char *pathname, int flags) {
                     return -1;
                 }
                 for (;;) {
-                    if (strcmp(str[i], instruction->shortname) == 0) {
+                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
 //                        if (instruction->child == NULL) {
 //                            instruction->child = malloc(sizeof(struct node));
 //                        }
@@ -283,6 +283,9 @@ ssize_t rread(int fd, void *buf, size_t count) {
     if (filed[fd].readable == 0 || filed[fd].type == dir) {
         return -1;
     }
+    if(filed[fd].fileordir->content == NULL) {
+        return -1;
+    }
     size_t need;
     if (filed[fd].offset + count > filed[fd].fileordir->size) {
         need = filed[fd].fileordir->size - filed[fd].offset;
@@ -372,7 +375,7 @@ int rmkdir(const char *pathname) {
             return -1;
         }
         for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0) {
+            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
 //                if (instruction->child == NULL) {
 //                    instruction->child = malloc(sizeof(struct node));
 //                }
@@ -452,7 +455,7 @@ int rrmdir(const char *pathname) {
             return -1;
         }
         for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0) {
+            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
                 if(index == 1){
                     temp_instruction = instruction;
                     temp_instruction_up = root;
@@ -552,20 +555,25 @@ int runlink(const char *pathname) {
             return -1;
         }
         for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0) {
-                if(index == 1){
-                    temp_instruction = instruction;
-                    temp_instruction_up = root;
-                }else {
-                    if (i == index - 1) {
+            if(i <= index - 2) {
+                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+                        if (i == index - 2) {
+                            temp_instruction_up = instruction;
+                        }
+                    instruction = instruction->child;
+                    break;
+                }
+            } else if(i == index - 1){
+                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
+                    if (index == 1) {
+                        temp_instruction = instruction;
+                        temp_instruction_up = root;
+                    } else {
                         temp_instruction = instruction;
                     }
-                    if (i == index - 2) {
-                        temp_instruction_up = instruction;
-                    }
+                    instruction = instruction->child;
+                    break;
                 }
-                instruction = instruction->child;
-                break;
             }
             if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
                 free(temp_string);
