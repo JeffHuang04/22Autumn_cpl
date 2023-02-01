@@ -34,28 +34,32 @@ typedef struct filedesc {
 filedesc filed[max_fd + 3];
 
 int pathname_simple(char **str, char *temp_pathname) {
+    int length = strlen(temp_pathname);
     if (*temp_pathname == '/') {
         int index = 0;
-        char *temp = strtok(temp_pathname, "/");
-        while (temp != NULL) {
-            if (strlen(temp) > length_name) {
-                return -1;
-            }
-            str[index] = temp;
-            int length = strlen(str[index]);
-            for (int i = 0; i <= length - 1; i++) {
-                if (*(str[index] + i) == 46 || (*(str[index] + i) >= '0' && *(str[index] + i) <= '9') ||
-                    (*(str[index] + i) >= 'a' && *(str[index] + i) <= 'z') ||
-                    (*(str[index] + i) >= 'A' && *(str[index] + i) <= 'Z')) {
-
+        int offset_ = 0;
+        for (int i = 0; i <= length - 1 ; i++) {
+            if(*(temp_pathname + i) == '/' ) {
+                if(i< length - 1 &&*(temp_pathname + i + 1) == '/') {
+                    i++;
+                    offset_ = 0;
+                }else{
+                    index ++;
+                    offset_ = 0;
+                }
+            }else  {
+                if (*(temp_pathname + i) == 46 ||
+                    (*(temp_pathname + i) >= '0' && *(temp_pathname + i) <= '9') ||
+                    (*(temp_pathname + i) >= 'a' && *(temp_pathname + i) <= 'z') ||
+                    (*(temp_pathname + i) >= 'A' && *(temp_pathname + i) <= 'Z')){
+                    //*(str[index] + offset_) = *(temp_pathname + i);
+                    //memcpy(str[index] + offset_,temp_pathname + i,1);
+                    offset_++;
                 } else {
                     return -1;
                 }
             }
-            temp = strtok(NULL, "/");
-            index++;
         }
-        return index;
     } else {
         return -1;
     }
@@ -542,7 +546,7 @@ int runlink(const char *pathname) {
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname);
     if (index == 0 || index == -1) {
-        free(temp_pathname);
+//        free(temp_pathname);
         free(str);
         return -1;
     }
@@ -559,7 +563,7 @@ int runlink(const char *pathname) {
     for (int i = 0; i <= index; i++) {
         if (i == index) {
             if(temp_instruction->type == DIR_NODE){
-                free(temp_pathname);
+//                free(temp_pathname);
                 free(str);
                 return -1;
             }
