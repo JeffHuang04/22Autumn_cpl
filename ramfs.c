@@ -9,8 +9,8 @@
 #define length_road 1024
 typedef struct node {
     enum {
-        FILE_NODE = 1,
-        DIR_NODE = 2
+        FILE_NODE ,
+        DIR_NODE ,
     } type;
     struct node *child;
     struct node *sibling;
@@ -22,8 +22,8 @@ node *root;
 typedef struct filedesc {
     bool use;
     enum {
-        file = 1,
-        dir = 2,
+        file ,
+        dir ,
     } type;
     int offset;
     //int flags;
@@ -34,21 +34,20 @@ typedef struct filedesc {
 filedesc filed[max_fd + 3];
 
 int pathname_simple(char **str, char *temp_string, const char *pathname) {
-    int lengthofroad = strlen(pathname);
-    if (*pathname == '/' && lengthofroad <= length_road) {
+    if (*pathname == '/') {
         int index = 0;
         char *temp = strtok(temp_string, "/");
         while (temp != NULL) {
             if (strlen(temp) > length_name) {
-        //        str = NULL;
+                //        str = NULL;
                 return -1;
             }
             str[index] = temp;
             int length = strlen(str[index]);
-            for (int i = 0; i <= length - 1 ; i++) {
-                if(*(str[index]+i) == 46 || (*(str[index]+i) >= '0' && *(str[index]+i) <= '9' ) ||
-                        (*(str[index]+i) >= 'a' && *(str[index]+i) <= 'z' )||
-                        (*(str[index]+i) >= 'A' && *(str[index]+i) <= 'Z' )){
+            for (int i = 0; i <= length - 1; i++) {
+                if (*(str[index] + i) == 46 || (*(str[index] + i) >= '0' && *(str[index] + i) <= '9') ||
+                    (*(str[index] + i) >= 'a' && *(str[index] + i) <= 'z') ||
+                    (*(str[index] + i) >= 'A' && *(str[index] + i) <= 'Z')) {
 
                 } else {
                     return -1;
@@ -59,15 +58,18 @@ int pathname_simple(char **str, char *temp_string, const char *pathname) {
         }
         return index;
     } else {
-    //    str = NULL;
         return -1;
     }
 }//没问题
 
 int ropen(const char *pathname, int flags) {
-    char *temp_string = malloc(length_road + 1);
+    int length_pathname = strlen(pathname);
+    if(length_pathname > length_road){
+        return -1;
+    }
+    char *temp_string = malloc(length_pathname + 1);
     strcpy(temp_string, pathname);
-    char **str = malloc(length_road + 1);
+    char **str = malloc( length_pathname+ 1);
     int index = pathname_simple(str, temp_string, pathname);
     node *instruction = root->child;
     node *instruction_temp = root;
@@ -80,7 +82,6 @@ int ropen(const char *pathname, int flags) {
         instruction = root;
         ifroot = true;
     }
-    int length_pathname = strlen(pathname);
     if(ifroot == false) {
         if ((flags & O_CREAT) == 0) {//判断不用创建文件只需查找
             for (int i = 0; i <= index - 1; i++) {
@@ -284,19 +285,16 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if (filed[fd].use==false || filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
-    if (filed[fd].fileordir->content == NULL && count > 0 ) {
-        filed[fd].fileordir->content = malloc(5);
-    }
     int need_size = filed[fd].offset + count;
     if (need_size > filed[fd].fileordir->size) {
         if (filed[fd].offset > filed[fd].fileordir->size) {
-            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset + 5);
+            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset);
             filed[fd].fileordir->content = temp;
             for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
                 memcpy(filed[fd].fileordir->content + i, "\0", 1);
             }
         }
-        void *temp = realloc(filed[fd].fileordir->content, need_size + 5);
+        void *temp = realloc(filed[fd].fileordir->content, need_size);
         filed[fd].fileordir->content = temp;
         filed[fd].fileordir->size = need_size;
     }
@@ -349,9 +347,13 @@ off_t rseek(int fd, off_t offset, int whence) {
 }
 
 int rmkdir(const char *pathname) {
-    char *temp_string = malloc(length_road + 1);
+    int length_pathname = strlen(pathname);
+    if(length_pathname > length_road){
+        return -1;
+    }
+    char *temp_string = malloc(length_pathname + 1);
     strcpy(temp_string, pathname);
-    char **str = malloc(length_road + 1);
+    char **str = malloc( length_pathname+ 1);
     int index = pathname_simple(str, temp_string, pathname);
     if (/*str == NULL*/index == 0 || index == -1) {
         free(temp_string);
@@ -413,7 +415,7 @@ int rmkdir(const char *pathname) {
                 break;
             }
             if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                free(temp_string);
+                //free(temp_string);
                 free(str);
                 return -1;
             }
@@ -424,9 +426,13 @@ int rmkdir(const char *pathname) {
 }
 
 int rrmdir(const char *pathname) {
-    char *temp_string = malloc(length_road + 1);
+    int length_pathname = strlen(pathname);
+    if(length_pathname > length_road){
+        return -1;
+    }
+    char *temp_string = malloc(length_pathname + 1);
     strcpy(temp_string, pathname);
-    char **str = malloc(length_road + 1);
+    char **str = malloc( length_pathname+ 1);
     int index = pathname_simple(str, temp_string, pathname);
     if (index == 0 || index == -1) {
         return -1;
@@ -512,16 +518,19 @@ int rrmdir(const char *pathname) {
 }
 
 int runlink(const char *pathname) {
-    char *temp_string = malloc(length_road + 1);
+    int length_pathname = strlen(pathname);
+    if(length_pathname > length_road){
+        return -1;
+    }
+    char *temp_string = malloc((length_pathname + 5)*sizeof (*temp_string));
     strcpy(temp_string, pathname);
-    char **str = malloc(length_road + 1);
+    char **str = malloc( (length_pathname + 5)*sizeof (**str));
     int index = pathname_simple(str, temp_string, pathname);
     if (index == 0 || index == -1) {
         free(temp_string);
         free(str);
         return -1;
     }
-    int length_pathname = strlen(pathname);
     if(pathname[length_pathname - 1] == '/') {
         free(temp_string);
         free(str);
