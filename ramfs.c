@@ -32,36 +32,64 @@ typedef struct filedesc {
     node *fileordir;
 } filedesc;
 filedesc filed[max_fd + 3];
-
+void freestr(char **str){
+    int index = 0;
+//    for (;;) {
+//        if(str[index] != NULL ) {
+//            free(str[index]);
+//            index++;
+//        } else {
+//            break;
+//        }
+//    }
+    free(str);
+    str = NULL;
+}
+void freetemp(char *temp){
+    if(*temp == '/'){
+        free(temp);
+        temp = NULL;
+    } else {
+        return;
+    }
+}
 int pathname_simple(char **str, char *temp_pathname) {
     int length = strlen(temp_pathname);
     if (*temp_pathname == '/') {
-        int index = 0;
+        int index = -1;
         int offset_ = 0;
         for (int i = 0; i <= length - 1 ; i++) {
             if(*(temp_pathname + i) == '/' ) {
-                if(i< length - 1 &&*(temp_pathname + i + 1) == '/') {
-                    i++;
+                if(( i< length - 1 && *(temp_pathname + i + 1) == '/' ) || i == length - 1) {
                     offset_ = 0;
                 }else{
                     index ++;
                     offset_ = 0;
                 }
-            }else  {
+            }else{
                 if (*(temp_pathname + i) == 46 ||
                     (*(temp_pathname + i) >= '0' && *(temp_pathname + i) <= '9') ||
                     (*(temp_pathname + i) >= 'a' && *(temp_pathname + i) <= 'z') ||
                     (*(temp_pathname + i) >= 'A' && *(temp_pathname + i) <= 'Z')){
-                    //*(str[index] + offset_) = *(temp_pathname + i);
-                    //memcpy(str[index] + offset_,temp_pathname + i,1);
+                    if(offset_ >= length_name) {
+                        return -2;
+                    }
+                    if(offset_ == 0){
+                        str[index] = NULL;
+                        str[index] = malloc(length_name);
+                    }
+                    memcpy(str[index]+offset_, temp_pathname + i,1);
                     offset_++;
+                    memcpy(str[index] + offset_,"\0",1);
+                    char *temp_show = str[index];
                 } else {
-                    return -1;
+                    return -2;
                 }
             }
         }
+        return index;
     } else {
-        return -1;
+        return -2;
     }
 }//没问题
 
@@ -70,10 +98,12 @@ int ropen(const char *pathname, int flags) {
     if(length_pathname > length_road){
         return -1;
     }
-    char **str = malloc( length_pathname + 5);
-    char *temp_pathname = malloc(length_pathname + 5);
+    char **str = NULL;
+    str = malloc( length_pathname );
+    char *temp_pathname = NULL;
+    temp_pathname = malloc(length_pathname );
     strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname);
+    int index = pathname_simple(str, temp_pathname) + 1;
     node *instruction = root->child;
     node *instruction_temp = root;
     bool ifroot = false;
@@ -354,15 +384,15 @@ int rmkdir(const char *pathname) {
     if(length_pathname > length_road){
         return -1;
     }
-    char **str = malloc( length_pathname );
-    char *temp_pathname = malloc(length_pathname);
+    char **str = NULL;
+    str = malloc( length_pathname);
+    char *temp_pathname = NULL;
+    temp_pathname = malloc(length_pathname + 3);
     strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname);
-    if (/*str == NULL*/index == 0 || index == -1) {
-        free(temp_pathname);
-        temp_pathname = NULL;
-        free(str);
-        str = NULL;
+    int index = pathname_simple(str, temp_pathname) + 1;
+    if (/*str == NULL*/index == -1 || index == 0) {
+        freetemp(temp_pathname);
+        freestr(str);
         return -1;
     }
     node *instruction = root->child;//从头遍历链表
@@ -373,10 +403,8 @@ int rmkdir(const char *pathname) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
                     if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
-                        free(temp_pathname);
-                        temp_pathname = NULL;
-                        free(str);
-                        str = NULL;
+                        freetemp(temp_pathname);
+                        freestr(str);
                         return -1;
                     }
                     //}
@@ -391,10 +419,8 @@ int rmkdir(const char *pathname) {
                 instruction->sibling->shortname = malloc(strlen(str[i]));
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
-                free(temp_pathname);
-                temp_pathname = NULL;
-                free(str);
-                str = NULL;
+                freetemp(temp_pathname);
+                freestr(str);
                 return 0;
             } else {//判断链表自身为空并引入新节点
                 instruction_temp->child = malloc(sizeof(struct node));
@@ -404,18 +430,14 @@ int rmkdir(const char *pathname) {
                 instruction->shortname = malloc(strlen(str[i]));
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
-                free(temp_pathname);
-                temp_pathname = NULL;
-                free(str);
-                str = NULL;
+                freetemp(temp_pathname);
+                freestr(str);
                 return 0;
             }
         }
         if (instruction == NULL) {//排除直接建立跨级目录即这级目录为空
-            free(temp_pathname);
-            temp_pathname = NULL;
-            free(str);
-            str = NULL;
+            freetemp(temp_pathname);
+            freestr(str);
             return -1;
         }
         for (;;) {
@@ -430,10 +452,8 @@ int rmkdir(const char *pathname) {
             if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
                 //free(temp_string);
 
-                free(temp_pathname);
-                temp_pathname = NULL;
-                free(str);
-                str = NULL;
+                freetemp(temp_pathname);
+                freestr(str);
                 return -1;
             }
             instruction = instruction->sibling;
@@ -450,7 +470,7 @@ int rrmdir(const char *pathname) {
     char **str = malloc( length_pathname + 5);
     char *temp_pathname = malloc(length_pathname + 5);
     strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname);
+    int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
         free(temp_pathname);
         free(str);
@@ -544,7 +564,7 @@ int runlink(const char *pathname) {
     char **str = malloc( length_pathname + 5);
     char *temp_pathname = malloc(length_pathname + 5);
     strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname);
+    int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
 //        free(temp_pathname);
         free(str);
