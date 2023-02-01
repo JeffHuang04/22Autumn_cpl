@@ -388,7 +388,7 @@ int rmkdir(const char *pathname) {
             return -1;
         }
         for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
+            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
 //                if (instruction->child == NULL) {
 //                    instruction->child = malloc(sizeof(struct node));
 //                }
