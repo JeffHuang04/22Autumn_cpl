@@ -488,6 +488,7 @@ int rrmdir(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
+    return -1;
 }
 
 int runlink(const char *pathname) {
@@ -593,6 +594,7 @@ int runlink(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
+    return -1;
 }
 
 void init_ramfs() {
