@@ -72,7 +72,7 @@ int ropen(const char *pathname, int flags) {
     node *instruction = root->child;
     node *instruction_temp = root;
     bool ifroot = false;
-    if (index == -1 ) {
+    if (index == -1) {
         free(temp_string);
         free(str);
         return -1;
@@ -80,6 +80,7 @@ int ropen(const char *pathname, int flags) {
         instruction = root;
         ifroot = true;
     }
+    int length_pathname = strlen(pathname);
     if(ifroot == false) {
         if ((flags & O_CREAT) == 0) {//判断不用创建文件只需查找
             for (int i = 0; i <= index - 1; i++) {
@@ -91,6 +92,11 @@ int ropen(const char *pathname, int flags) {
                     }
                     for (;;) {
                         if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
+                            if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+                                free(temp_string);
+                                free(str);
+                                return -1;
+                            }
                             break;
                         }
                         if (instruction->sibling == NULL) {
@@ -134,6 +140,11 @@ int ropen(const char *pathname, int flags) {
                         for (;;) {
                             //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
                             if (strcmp(str[i], instruction->shortname) == 0/* && instruction->type == FILE_NODE*/) {
+                                if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+                                    free(temp_string);
+                                    free(str);
+                                    return -1;
+                                }
                                 flag_file = 1;
                                 break;
                             }
@@ -146,6 +157,11 @@ int ropen(const char *pathname, int flags) {
                         if (flag_file == 1) {
                             break;
                         }
+                        if (pathname[length_pathname - 1] == '/') {
+                            free(temp_string);
+                            free(str);
+                            return -1;
+                        }
                         instruction->sibling = malloc(sizeof(struct node));
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
@@ -155,6 +171,11 @@ int ropen(const char *pathname, int flags) {
                         instruction = instruction->sibling;
                         break;
                     } else {//判断链表自身为空并引入新节点
+                        if (pathname[length_pathname - 1] == '/') {
+                            free(temp_string);
+                            free(str);
+                            return -1;
+                        }
                         instruction_temp->child = malloc(sizeof(struct node));
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
@@ -188,7 +209,6 @@ int ropen(const char *pathname, int flags) {
                 }
             }
         }
-        int length_pathname = strlen(pathname);
         if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
             free(temp_string);
             free(str);
@@ -261,7 +281,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if(fd < 0 || fd >= max_fd){
         return -1;
     }
-    if (filed[fd].writable == 0 || filed[fd].type == dir) {
+    if (filed[fd].use==false || filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
     if (filed[fd].fileordir->content == NULL && count > 0 ) {
@@ -286,7 +306,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
-    if (filed[fd].readable == 0 || filed[fd].type == dir) {
+    if (filed[fd].use==false || filed[fd].readable == 0 || filed[fd].type == dir) {
         return -1;
     }
     if(filed[fd].fileordir->content == NULL) {
