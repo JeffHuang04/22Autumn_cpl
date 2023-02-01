@@ -415,7 +415,7 @@ int rmkdir(const char *pathname) {
                 break;
             }
             if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                //free(temp_string);
+                free(temp_string);
                 free(str);
                 return -1;
             }
