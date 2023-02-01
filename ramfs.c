@@ -400,6 +400,7 @@ int rmkdir(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
+    return 0;
 }
 
 int rrmdir(const char *pathname) {
