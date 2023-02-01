@@ -68,7 +68,7 @@ int ropen(const char *pathname, int flags) {
     }
     char **str = malloc( length_pathname + 5);
     char *temp_pathname = malloc(length_pathname + 5);
-    memcpy(temp_pathname,pathname,length_pathname);
+    strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname);
     node *instruction = root->child;
     node *instruction_temp = root;
@@ -445,7 +445,7 @@ int rrmdir(const char *pathname) {
     }
     char **str = malloc( length_pathname + 5);
     char *temp_pathname = malloc(length_pathname + 5);
-    memcpy(temp_pathname,pathname,length_pathname);
+    strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname);
     if (index == 0 || index == -1) {
         free(temp_pathname);
@@ -539,7 +539,7 @@ int runlink(const char *pathname) {
     }
     char **str = malloc( length_pathname + 5);
     char *temp_pathname = malloc(length_pathname + 5);
-    memcpy(temp_pathname,pathname,length_pathname);
+    strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname);
     if (index == 0 || index == -1) {
         free(temp_pathname);
