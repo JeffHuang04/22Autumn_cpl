@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#define max_deepth_think 500
+#define max_deepth_think 1024
 #define max_fd 4096
 #define length_name 32
 #define length_road 1024
