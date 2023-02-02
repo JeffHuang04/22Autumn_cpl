@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#define max_deepth_think 30
 #define max_fd 4096
 #define length_name 32
 #define length_road 1024
@@ -76,7 +76,7 @@ int pathname_simple(char **str, char *temp_pathname) {
                     }
                     if(offset_ == 0){
                         str[index] = NULL;
-                        str[index] = malloc(length_name);
+                        str[index] = malloc(length_name + 1);
                     }
                     memcpy(str[index]+offset_, temp_pathname + i,1);
                     offset_++;
@@ -99,9 +99,9 @@ int ropen(const char *pathname, int flags) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( length_pathname );
+    str = malloc( max_deepth_think );
     char *temp_pathname = NULL;
-    temp_pathname = malloc(length_pathname );
+    temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     node *instruction = root->child;
@@ -214,7 +214,7 @@ int ropen(const char *pathname, int flags) {
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
                         instruction->child = NULL;
-                        instruction->shortname = malloc(strlen(str[i]) + 5);
+                        instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
                         break;
@@ -385,9 +385,9 @@ int rmkdir(const char *pathname) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( length_pathname);
+    str = malloc( max_deepth_think);
     char *temp_pathname = NULL;
-    temp_pathname = malloc(length_pathname + 3);
+    temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (/*str == NULL*/index == -1 || index == 0) {
@@ -416,7 +416,7 @@ int rmkdir(const char *pathname) {
                 instruction->sibling = malloc(sizeof(struct node));
                 instruction->sibling->sibling = NULL;
                 instruction->sibling->child = NULL;
-                instruction->sibling->shortname = malloc(strlen(str[i]));
+                instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
                 freetemp(temp_pathname);
@@ -427,7 +427,7 @@ int rmkdir(const char *pathname) {
                 instruction = instruction_temp->child;
                 instruction->sibling = NULL;
                 instruction->child = NULL;
-                instruction->shortname = malloc(strlen(str[i]));
+                instruction->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
                 freetemp(temp_pathname);
@@ -467,8 +467,10 @@ int rrmdir(const char *pathname) {
     if(length_pathname > length_road){
         return -1;
     }
-    char **str = malloc( length_pathname + 5);
-    char *temp_pathname = malloc(length_pathname + 5);
+    char **str = NULL;
+    str = malloc( max_deepth_think);
+    char *temp_pathname = NULL;
+    temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
@@ -479,7 +481,7 @@ int rrmdir(const char *pathname) {
     node *instruction = root->child;
     node *temp_instruction = root->child;//要删除的目录
     node *temp_instruction_up = root;//要删除的上一级目录
-    node *temp;//暂存需要free的目录
+    node *temp = NULL;//暂存需要free的目录
     for (int i = 0; i <= index; i++) {
         if (i == index) {
             if(temp_instruction->type == FILE_NODE){
@@ -492,10 +494,12 @@ int rrmdir(const char *pathname) {
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;//malloc(sizeof (struct node));
                     free(temp);
+                    temp = NULL;
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点但不是末节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
                     free(temp);
+                    temp = NULL;
                 } else {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
@@ -509,10 +513,12 @@ int rrmdir(const char *pathname) {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
                         free(temp);
+                        temp = NULL;
                     } else {//中间节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;
                         free(temp);
+                        temp = NULL;
                     }
                 }
                 freetemp(temp_pathname);
@@ -561,8 +567,8 @@ int runlink(const char *pathname) {
     if(length_pathname > length_road){
         return -1;
     }
-    char **str = malloc( length_pathname + 5);
-    char *temp_pathname = malloc(length_pathname + 5);
+    char **str = malloc( max_deepth_think);
+    char *temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
@@ -579,7 +585,7 @@ int runlink(const char *pathname) {
     instruction = root->child;
     node *temp_instruction = root->child;
     node *temp_instruction_up = root;//上一级目录
-    node *temp;
+    node *temp = NULL;
     for (int i = 0; i <= index; i++) {
         if (i == index) {
             if(temp_instruction->type == DIR_NODE){
@@ -592,12 +598,16 @@ int runlink(const char *pathname) {
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;
                     free(temp->content);
+                    temp->content = NULL;
                     free(temp);
+                    temp = NULL;
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
                     free(temp->content);
+                    temp->content = NULL;
                     free(temp);
+                    temp = NULL;
                 } else {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
@@ -611,12 +621,16 @@ int runlink(const char *pathname) {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
                         free(temp->content);
+                        temp->content = NULL;
                         free(temp);
+                        temp = NULL;
                     } else {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
                         free(temp->content);
+                        temp->content = NULL;
                         free(temp);
+                        temp = NULL;
                     }
                 }
                 freetemp(temp_pathname);
