@@ -684,6 +684,8 @@ void init_ramfs() {
     root->child = NULL;//malloc(sizeof(struct node));
     root->content = NULL;
     root->size = 0;
+    filedesc *p = filed;
+    p = calloc(max_fd,sizeof (filedesc*));
 }
 //
 // Created by Hrs20 on 2023/2/1.
