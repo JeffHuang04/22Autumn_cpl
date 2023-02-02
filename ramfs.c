@@ -292,50 +292,50 @@ int ropen(const char *pathname, int flags) {
 }
 
 int rclose(int fd) {
-    if(fd < 0 || fd >= max_fd){
-        return -1;
-    }
-    if (filed[fd].use == true) {
-        filed[fd].use = false;
-        filed[fd].fileordir = NULL;
-        filed[fd].writable = 0;
-        filed[fd].readable = 0;
-        filed[fd].offset = 0;
-        filed[fd].type = dir;
-        //filed[fd].flags = 0;
-        return 0;
-    } else {
-        return -1;
-    }
-}
-
-ssize_t rwrite(int fd, const void *buf, size_t count) {
 //    if(fd < 0 || fd >= max_fd){
 //        return -1;
 //    }
-//    if (filed[fd].use == false || filed[fd].writable == 0 || filed[fd].type == dir) {
+//    if (filed[fd].use == true) {
+//        filed[fd].use = false;
+//        filed[fd].fileordir = NULL;
+//        filed[fd].writable = 0;
+//        filed[fd].readable = 0;
+//        filed[fd].offset = 0;
+//        filed[fd].type = dir;
+//        //filed[fd].flags = 0;
+//        return 0;
+//    } else {
 //        return -1;
 //    }
-//    if(count < 0){
-//        return -1;
-//    }
-//    int need_size = filed[fd].offset + count;
-//    if (need_size > filed[fd].fileordir->size) {
-//        if (filed[fd].offset > filed[fd].fileordir->size) {
-//            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset + 1);
-//            filed[fd].fileordir->content = temp;
-//            for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
-//                memcpy(filed[fd].fileordir->content + i, "\0", 1);
-//            }
-//        }
-//        void *temp = realloc(filed[fd].fileordir->content, need_size);
-//        filed[fd].fileordir->content = temp;
-//        filed[fd].fileordir->size = need_size;
-//    }
-//    memcpy((filed[fd].fileordir->content + filed[fd].offset), buf, count);
-//    filed[fd].offset = filed[fd].offset + count;
-//    char *temp_f = filed[fd].fileordir->content;
-//    return count;
+}
+
+ssize_t rwrite(int fd, const void *buf, size_t count) {
+    if(fd < 0 || fd >= max_fd){
+        return -1;
+    }
+    if (filed[fd].use == false || filed[fd].writable == 0 || filed[fd].type == dir) {
+        return -1;
+    }
+    if(count < 0){
+        return -1;
+    }
+    int need_size = filed[fd].offset + count;
+    if (need_size > filed[fd].fileordir->size) {
+        if (filed[fd].offset > filed[fd].fileordir->size) {
+            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset + 1);
+            filed[fd].fileordir->content = temp;
+            for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
+                memcpy(filed[fd].fileordir->content + i, "\0", 1);
+            }
+        }
+        void *temp = realloc(filed[fd].fileordir->content, need_size);
+        filed[fd].fileordir->content = temp;
+        filed[fd].fileordir->size = need_size;
+    }
+    memcpy((filed[fd].fileordir->content + filed[fd].offset), buf, count);
+    filed[fd].offset = filed[fd].offset + count;
+    char *temp_f = filed[fd].fileordir->content;
+    return count;
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
