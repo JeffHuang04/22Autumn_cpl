@@ -89,224 +89,224 @@ int pathname_simple(char **str, char *temp_pathname) {
 }//没问题
 
 int ropen(const char *pathname, int flags) {
-    int length_pathname = strlen(pathname);
-    if(length_pathname > length_road){
-        return -1;
-    }
-    char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    char *temp_pathname = NULL;
-    temp_pathname = malloc(length_pathname + 1);
-    strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname) + 1;
-    node *instruction = root->child;
-    node *instruction_temp = root;
-    bool ifroot = false;
-    if (index == -1) {
-        freetemp(temp_pathname);
-        freestr(str,index);
-        return -1;
-    } else if(index == 0) {
-        instruction = root;
-        ifroot = true;
-    }
-    if(ifroot == false) {
-        if ((flags & O_CREAT) == 0) {//判断不用创建文件只需查找
-            for (int i = 0; i <= index - 1; i++) {
-                if (i == index - 1) {
-                    if (instruction == NULL) {//最低层目录为空
-                        freetemp(temp_pathname);
-                        freestr(str,index);
-                        return -1;
-                    }
-                    for (;;) {
-                        if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
-                            if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-                                freetemp(temp_pathname);
-                                freestr(str,index);
-                                return -1;
-                            }
-                            break;
-                        }
-                        if (instruction->sibling == NULL) {
-                            freetemp(temp_pathname);
-                            freestr(str,index);
-                            return -1;
-                        }
-                        instruction = instruction->sibling;
-                    }
-                    break;
-                }
-                if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
-                    freetemp(temp_pathname);
-                    freestr(str,index);
-                    return -1;
-                }
-                for (;;) {
-                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-                        //instruction_temp = instruction;
-                        instruction = instruction->child;
-                        break;
-                    }
-                    if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                        freetemp(temp_pathname);
-                        freestr(str,index);
-                        return -1;
-                    }
-                    instruction = instruction->sibling;
-                }
-            }
-        } else {//判断要创建文件、打开文件、打开目录
-            for (int i = 0; i <= index - 1; i++) {
-                if (i == index - 1) {
-//                    if (instruction_temp->type == FILE_NODE) {
-//                        free(temp_string);
-//                        free(str);
+//    int length_pathname = strlen(pathname);
+//    if(length_pathname > length_road){
+//        return -1;
+//    }
+//    char **str = NULL;
+//    str = malloc( max_deepth_think + 1);
+//    char *temp_pathname = NULL;
+//    temp_pathname = malloc(length_pathname + 1);
+//    strcpy(temp_pathname,pathname);
+//    int index = pathname_simple(str, temp_pathname) + 1;
+//    node *instruction = root->child;
+//    node *instruction_temp = root;
+//    bool ifroot = false;
+//    if (index == -1) {
+//        freetemp(temp_pathname);
+//        freestr(str,index);
+//        return -1;
+//    } else if(index == 0) {
+//        instruction = root;
+//        ifroot = true;
+//    }
+//    if(ifroot == false) {
+//        if ((flags & O_CREAT) == 0) {//判断不用创建文件只需查找
+//            for (int i = 0; i <= index - 1; i++) {
+//                if (i == index - 1) {
+//                    if (instruction == NULL) {//最低层目录为空
+//                        freetemp(temp_pathname);
+//                        freestr(str,index);
 //                        return -1;
 //                    }
-                    if (instruction != NULL) {
-                        int flag_file = 0;
-                        for (;;) {
-                            //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                            if (strcmp(str[i], instruction->shortname) == 0/* && instruction->type == FILE_NODE*/) {
-                                if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-                                    freetemp(temp_pathname);
-                                    freestr(str,index);
-                                    return -1;
-                                }
-                                flag_file = 1;
-                                break;
-                            }
-                            //}
-                            if (instruction->sibling == NULL) {//（之后循环退出的条件）
-                                break;
-                            }
-                            instruction = instruction->sibling;
-                        }//检查有没有重名的
-                        if (flag_file == 1) {
-                            break;
-                        }
-                        if (pathname[length_pathname - 1] == '/') {
-                            freetemp(temp_pathname);
-                            freestr(str,index);
-                            return -1;
-                        }
-                        instruction->sibling = NULL;
-                        instruction->sibling = malloc(sizeof(struct node) + 1);
-                        instruction->sibling->sibling = NULL;
-                        instruction->sibling->child = NULL;
-                        instruction->sibling->shortname = NULL;
-                        instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
-                        strcpy(instruction->sibling->shortname, str[i]);
-                        instruction->sibling->type = FILE_NODE;
-                        instruction = instruction->sibling;
-                        break;
-                    } else {//判断链表自身为空并引入新节点
-                        if (pathname[length_pathname - 1] == '/') {
-                            freetemp(temp_pathname);
-                            freestr(str,index);
-                            return -1;
-                        }
-                        instruction_temp->child = malloc(sizeof(struct node) + 1);
-                        instruction = instruction_temp->child;
-                        instruction->sibling = NULL;
-                        instruction->child = NULL;
-                        instruction->shortname = malloc(strlen(str[i]) + 1);
-                        strcpy(instruction->shortname, str[i]);
-                        instruction->type = FILE_NODE;
-                        break;
-                    }
-                }
-                if (instruction == NULL) {//排除直接建立跨级目录即这级目录为空
-                    freetemp(temp_pathname);
-                    freestr(str,index);
-                    return -1;
-                }
-                for (;;) {
-                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-//                        if (instruction->child == NULL) {
-//                            instruction->child = malloc(sizeof(struct node));
+//                    for (;;) {
+//                        if (strcmp(instruction->shortname, str[i]) == 0 /*&& instruction->type == FILE_NODE*/) {
+//                            if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+//                                freetemp(temp_pathname);
+//                                freestr(str,index);
+//                                return -1;
+//                            }
+//                            break;
 //                        }
-                        instruction_temp = instruction;
-                        instruction = instruction->child;
-                        break;
-                    }
-                    if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                        freetemp(temp_pathname);
-                        freestr(str,index);
-                        return -1;
-                    }
-                    instruction = instruction->sibling;
-                }
-            }
-        }
-//        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-//            freetemp(temp_pathname);
-//            freestr(str,index);
-//            return -1;
+//                        if (instruction->sibling == NULL) {
+//                            freetemp(temp_pathname);
+//                            freestr(str,index);
+//                            return -1;
+//                        }
+//                        instruction = instruction->sibling;
+//                    }
+//                    break;
+//                }
+//                if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
+//                    freetemp(temp_pathname);
+//                    freestr(str,index);
+//                    return -1;
+//                }
+//                for (;;) {
+//                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+//                        //instruction_temp = instruction;
+//                        instruction = instruction->child;
+//                        break;
+//                    }
+//                    if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+//                        freetemp(temp_pathname);
+//                        freestr(str,index);
+//                        return -1;
+//                    }
+//                    instruction = instruction->sibling;
+//                }
+//            }
+//        } else {//判断要创建文件、打开文件、打开目录
+//            for (int i = 0; i <= index - 1; i++) {
+//                if (i == index - 1) {
+////                    if (instruction_temp->type == FILE_NODE) {
+////                        free(temp_string);
+////                        free(str);
+////                        return -1;
+////                    }
+//                    if (instruction != NULL) {
+//                        int flag_file = 0;
+//                        for (;;) {
+//                            //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
+//                            if (strcmp(str[i], instruction->shortname) == 0/* && instruction->type == FILE_NODE*/) {
+//                                if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+//                                    freetemp(temp_pathname);
+//                                    freestr(str,index);
+//                                    return -1;
+//                                }
+//                                flag_file = 1;
+//                                break;
+//                            }
+//                            //}
+//                            if (instruction->sibling == NULL) {//（之后循环退出的条件）
+//                                break;
+//                            }
+//                            instruction = instruction->sibling;
+//                        }//检查有没有重名的
+//                        if (flag_file == 1) {
+//                            break;
+//                        }
+//                        if (pathname[length_pathname - 1] == '/') {
+//                            freetemp(temp_pathname);
+//                            freestr(str,index);
+//                            return -1;
+//                        }
+//                        instruction->sibling = NULL;
+//                        instruction->sibling = malloc(sizeof(struct node) + 1);
+//                        instruction->sibling->sibling = NULL;
+//                        instruction->sibling->child = NULL;
+//                        instruction->sibling->shortname = NULL;
+//                        instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
+//                        strcpy(instruction->sibling->shortname, str[i]);
+//                        instruction->sibling->type = FILE_NODE;
+//                        instruction = instruction->sibling;
+//                        break;
+//                    } else {//判断链表自身为空并引入新节点
+//                        if (pathname[length_pathname - 1] == '/') {
+//                            freetemp(temp_pathname);
+//                            freestr(str,index);
+//                            return -1;
+//                        }
+//                        instruction_temp->child = malloc(sizeof(struct node) + 1);
+//                        instruction = instruction_temp->child;
+//                        instruction->sibling = NULL;
+//                        instruction->child = NULL;
+//                        instruction->shortname = malloc(strlen(str[i]) + 1);
+//                        strcpy(instruction->shortname, str[i]);
+//                        instruction->type = FILE_NODE;
+//                        break;
+//                    }
+//                }
+//                if (instruction == NULL) {//排除直接建立跨级目录即这级目录为空
+//                    freetemp(temp_pathname);
+//                    freestr(str,index);
+//                    return -1;
+//                }
+//                for (;;) {
+//                    if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+////                        if (instruction->child == NULL) {
+////                            instruction->child = malloc(sizeof(struct node));
+////                        }
+//                        instruction_temp = instruction;
+//                        instruction = instruction->child;
+//                        break;
+//                    }
+//                    if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+//                        freetemp(temp_pathname);
+//                        freestr(str,index);
+//                        return -1;
+//                    }
+//                    instruction = instruction->sibling;
+//                }
+//            }
 //        }
-    }
-    int index_fd = 0;
-    for (int i = 0; i <= max_fd - 1; i++) {
-        if (filed[i].use == false) {
-            index_fd = i;
-            filed[i].use = true;
-            break;
-        }
-    }
-    if (instruction->type == DIR_NODE) {
-        filed[index_fd].fileordir = instruction;
-        filed[index_fd].type = dir;
-    } else if (instruction->type == FILE_NODE) {
-        //filed[index_fd].flags = flags;
-        filed[index_fd].type = file;
-        filed[index_fd].fileordir = instruction;
-        if ((flags & O_APPEND) == 0) {//判断不进行追加
-            filed[index_fd].offset = 0;
-        } else {
-
-            filed[index_fd].offset = instruction->size;//size应包含‘/0’
-        }
-        if ((flags & O_WRONLY) == 0) {//判断可读
-            filed[index_fd].readable = 1;
-            if ((flags & O_RDWR) == 0) {
-                filed[index_fd].writable = 0;
-            } else {
-                filed[index_fd].writable = 1;
-            }
-        } else {
-            filed[index_fd].readable = 0;
-            filed[index_fd].writable = 1;
-        }
-        if ((flags & O_TRUNC) != 0 && filed[index_fd].writable == 1) {//清空
-            void *temp_content = instruction->content;
-            instruction->content = NULL;
-            free(temp_content);
-            filed[index_fd].offset = 0;
-            instruction->size = 0;
-        }
-    }
-    freetemp(temp_pathname);
-    freestr(str,index);
-    return index_fd;
+////        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+////            freetemp(temp_pathname);
+////            freestr(str,index);
+////            return -1;
+////        }
+//    }
+//    int index_fd = 0;
+//    for (int i = 0; i <= max_fd - 1; i++) {
+//        if (filed[i].use == false) {
+//            index_fd = i;
+//            filed[i].use = true;
+//            break;
+//        }
+//    }
+//    if (instruction->type == DIR_NODE) {
+//        filed[index_fd].fileordir = instruction;
+//        filed[index_fd].type = dir;
+//    } else if (instruction->type == FILE_NODE) {
+//        //filed[index_fd].flags = flags;
+//        filed[index_fd].type = file;
+//        filed[index_fd].fileordir = instruction;
+//        if ((flags & O_APPEND) == 0) {//判断不进行追加
+//            filed[index_fd].offset = 0;
+//        } else {
+//
+//            filed[index_fd].offset = instruction->size;//size应包含‘/0’
+//        }
+//        if ((flags & O_WRONLY) == 0) {//判断可读
+//            filed[index_fd].readable = 1;
+//            if ((flags & O_RDWR) == 0) {
+//                filed[index_fd].writable = 0;
+//            } else {
+//                filed[index_fd].writable = 1;
+//            }
+//        } else {
+//            filed[index_fd].readable = 0;
+//            filed[index_fd].writable = 1;
+//        }
+//        if ((flags & O_TRUNC) != 0 && filed[index_fd].writable == 1) {//清空
+//            void *temp_content = instruction->content;
+//            instruction->content = NULL;
+//            free(temp_content);
+//            filed[index_fd].offset = 0;
+//            instruction->size = 0;
+//        }
+//    }
+//    freetemp(temp_pathname);
+//    freestr(str,index);
+//    return index_fd;
 }
 
 int rclose(int fd) {
-//    if(fd < 0 || fd >= max_fd){
-//        return -1;
-//    }
-//    if (filed[fd].use == true) {
-//        filed[fd].use = false;
-//        filed[fd].fileordir = NULL;
-//        filed[fd].writable = 0;
-//        filed[fd].readable = 0;
-//        filed[fd].offset = 0;
-//        filed[fd].type = dir;
-//        //filed[fd].flags = 0;
-//        return 0;
-//    } else {
-//        return -1;
-//    }
+    if(fd < 0 || fd >= max_fd){
+        return -1;
+    }
+    if (filed[fd].use == true) {
+        filed[fd].use = false;
+        filed[fd].fileordir = NULL;
+        filed[fd].writable = 0;
+        filed[fd].readable = 0;
+        filed[fd].offset = 0;
+        filed[fd].type = dir;
+        //filed[fd].flags = 0;
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 ssize_t rwrite(int fd, const void *buf, size_t count) {
