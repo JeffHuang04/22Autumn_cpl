@@ -26,7 +26,6 @@ typedef struct filedesc {
         dir = 2,
     } type;
     int offset;
-    //int flags;
     int writable;
     int readable;
     node *fileordir;
@@ -74,10 +73,10 @@ int pathname_simple(char **str, char *temp_pathname) {
                         str[index] = NULL;
                         str[index] = malloc(length_name + 1);
                     }
-                    memcpy(str[index]+offset_, temp_pathname + i,1);
+                    memcpy(str[index] + offset_, temp_pathname + i,1);
                     offset_++;
                     memcpy(str[index] + offset_,"\0",1);
-                    char *temp_show = str[index];
+//                    char *temp_show = str[index];
                 } else {
                     return -2;
                 }
@@ -95,7 +94,7 @@ int ropen(const char *pathname, int flags) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think );
+    str = malloc( max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
@@ -192,7 +191,7 @@ int ropen(const char *pathname, int flags) {
                             freestr(str,index);
                             return -1;
                         }
-                        instruction->sibling = malloc(sizeof(struct node) + 5);
+                        instruction->sibling = malloc(sizeof(struct node) + 1);
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
@@ -206,7 +205,7 @@ int ropen(const char *pathname, int flags) {
                             freestr(str,index);
                             return -1;
                         }
-                        instruction_temp->child = malloc(sizeof(struct node) + 5);
+                        instruction_temp->child = malloc(sizeof(struct node) + 1);
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
                         instruction->child = NULL;
@@ -314,10 +313,13 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if (filed[fd].use==false || filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
+    if(count < 0){
+        return -1;
+    }
     int need_size = filed[fd].offset + count;
     if (need_size > filed[fd].fileordir->size) {
         if (filed[fd].offset > filed[fd].fileordir->size) {
-            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset);
+            void *temp = realloc(filed[fd].fileordir->content, filed[fd].offset + 1);
             filed[fd].fileordir->content = temp;
             for (int i = filed[fd].fileordir->size; i <= filed[fd].offset - 1; i++) {
                 memcpy(filed[fd].fileordir->content + i, "\0", 1);
@@ -329,6 +331,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     }
     memcpy((filed[fd].fileordir->content + filed[fd].offset), buf, count);
     filed[fd].offset = filed[fd].offset + count;
+    char *temp_f = filed[fd].fileordir->content;
     return count;
 }
 
@@ -337,6 +340,9 @@ ssize_t rread(int fd, void *buf, size_t count) {
         return -1;
     }
     if(filed[fd].fileordir->content == NULL) {
+        return -1;
+    }
+    if(count < 0){
         return -1;
     }
     int need = 0;//如果是负值会如何
@@ -381,7 +387,7 @@ int rmkdir(const char *pathname) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think);
+    str = malloc( max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
@@ -464,7 +470,7 @@ int rrmdir(const char *pathname) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think);
+    str = malloc( max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
@@ -563,7 +569,7 @@ int runlink(const char *pathname) {
     if(length_pathname > length_road){
         return -1;
     }
-    char **str = malloc( max_deepth_think);
+    char **str = malloc( max_deepth_think + 1);
     char *temp_pathname = malloc(length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
@@ -685,7 +691,7 @@ void init_ramfs() {
     root->content = NULL;
     root->size = 0;
     filedesc *p = filed;
-    p = calloc(max_fd,sizeof (filedesc*));
+    p = calloc(max_fd,sizeof (filedesc));
 }
 //
 // Created by Hrs20 on 2023/2/1.
