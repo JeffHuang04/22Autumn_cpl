@@ -385,86 +385,86 @@ off_t rseek(int fd, off_t offset, int whence) {
 }
 
 int rmkdir(const char *pathname) {
-    int length_pathname = strlen(pathname);
-    if(length_pathname > length_road){
-        return -1;
-    }
-    char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    char *temp_pathname = NULL;
-    temp_pathname = malloc(length_pathname + 1);
-    strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname) + 1;
-    if (/*str == NULL*/index == -1 || index == 0) {
-        freetemp(temp_pathname);
-        freestr(str,index);
-        return -1;
-    }
-    node *instruction = root->child;//从头遍历链表
-    node *instruction_temp = root;
-    for (int i = 0; i <= index - 1; i++) {
-        if (i == index - 1) {
-            if (instruction != NULL) {
-                for (;;) {
-                    //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                    if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
-                        freetemp(temp_pathname);
-                        freestr(str,index);
-                        return -1;
-                    }
-                    //}
-                    if (instruction->sibling == NULL) {//（之后循环退出的条件）
-                        break;
-                    }
-                    instruction = instruction->sibling;
-                }//检查有没有重名的
-                instruction->sibling = malloc(sizeof(struct node));
-                instruction->sibling->sibling = NULL;
-                instruction->sibling->child = NULL;
-                instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
-                strcpy(instruction->sibling->shortname, str[i]);
-                instruction->sibling->type = DIR_NODE;
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return 0;
-            } else {//判断链表自身为空并引入新节点
-                instruction_temp->child = malloc(sizeof(struct node));
-                instruction = instruction_temp->child;
-                instruction->sibling = NULL;
-                instruction->child = NULL;
-                instruction->shortname = malloc(strlen(str[i]) + 1);
-                strcpy(instruction->shortname, str[i]);
-                instruction->type = DIR_NODE;
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return 0;
-            }
-        }
-        if (instruction == NULL) {//排除直接建立跨级目录即这级目录为空
-            freetemp(temp_pathname);
-            freestr(str,index);
-            return -1;
-        }
-        for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-//                if (instruction->child == NULL) {
-//                    instruction->child = malloc(sizeof(struct node));
-//                }
-                instruction_temp = instruction;
-                instruction = instruction->child;
-                break;
-            }
-            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                //free(temp_string);
-
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-            instruction = instruction->sibling;
-        }
-    }
-    return 0;
+//    int length_pathname = strlen(pathname);
+//    if(length_pathname > length_road){
+//        return -1;
+//    }
+//    char **str = NULL;
+//    str = malloc( max_deepth_think + 1);
+//    char *temp_pathname = NULL;
+//    temp_pathname = malloc(length_pathname + 1);
+//    strcpy(temp_pathname,pathname);
+//    int index = pathname_simple(str, temp_pathname) + 1;
+//    if (/*str == NULL*/index == -1 || index == 0) {
+//        freetemp(temp_pathname);
+//        freestr(str,index);
+//        return -1;
+//    }
+//    node *instruction = root->child;//从头遍历链表
+//    node *instruction_temp = root;
+//    for (int i = 0; i <= index - 1; i++) {
+//        if (i == index - 1) {
+//            if (instruction != NULL) {
+//                for (;;) {
+//                    //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
+//                    if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
+//                        freetemp(temp_pathname);
+//                        freestr(str,index);
+//                        return -1;
+//                    }
+//                    //}
+//                    if (instruction->sibling == NULL) {//（之后循环退出的条件）
+//                        break;
+//                    }
+//                    instruction = instruction->sibling;
+//                }//检查有没有重名的
+//                instruction->sibling = malloc(sizeof(struct node));
+//                instruction->sibling->sibling = NULL;
+//                instruction->sibling->child = NULL;
+//                instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
+//                strcpy(instruction->sibling->shortname, str[i]);
+//                instruction->sibling->type = DIR_NODE;
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return 0;
+//            } else {//判断链表自身为空并引入新节点
+//                instruction_temp->child = malloc(sizeof(struct node));
+//                instruction = instruction_temp->child;
+//                instruction->sibling = NULL;
+//                instruction->child = NULL;
+//                instruction->shortname = malloc(strlen(str[i]) + 1);
+//                strcpy(instruction->shortname, str[i]);
+//                instruction->type = DIR_NODE;
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return 0;
+//            }
+//        }
+//        if (instruction == NULL) {//排除直接建立跨级目录即这级目录为空
+//            freetemp(temp_pathname);
+//            freestr(str,index);
+//            return -1;
+//        }
+//        for (;;) {
+//            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+////                if (instruction->child == NULL) {
+////                    instruction->child = malloc(sizeof(struct node));
+////                }
+//                instruction_temp = instruction;
+//                instruction = instruction->child;
+//                break;
+//            }
+//            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+//                //free(temp_string);
+//
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//            instruction = instruction->sibling;
+//        }
+//    }
+//    return 0;
 }
 
 int rrmdir(const char *pathname) {
