@@ -18,7 +18,7 @@ typedef struct node {
     int size;
     char *shortname;
 } node;
-node *root;
+node *root = NULL;
 typedef struct filedesc {
     bool use;
     enum {
@@ -299,7 +299,7 @@ int rclose(int fd) {
         filed[fd].writable = 0;
         filed[fd].readable = 0;
         filed[fd].offset = 0;
-        filed[fd].type = 0;
+        filed[fd].type = dir;
         //filed[fd].flags = 0;
         return 0;
     } else {
