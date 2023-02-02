@@ -339,27 +339,27 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
-    if (filed[fd].use==false || filed[fd].readable == 0 || filed[fd].type == dir) {
-        return -1;
-    }
-    if(filed[fd].fileordir->content == NULL) {
-        return -1;
-    }
-    if(count < 0){
-        return -1;
-    }
-    int need = 0;//如果是负值会如何
-    if ((int )(filed[fd].offset + count) > filed[fd].fileordir->size) {
-        need = filed[fd].fileordir->size - filed[fd].offset;
-    } else {
-        need = count;
-    }
-    if (need < 0) {
-        return -1;
-    }
-    memcpy(buf, filed[fd].fileordir->content + filed[fd].offset, need);
-    filed[fd].offset = filed[fd].offset + need;
-    return need;
+//    if (filed[fd].use==false || filed[fd].readable == 0 || filed[fd].type == dir) {
+//        return -1;
+//    }
+//    if(filed[fd].fileordir->content == NULL) {
+//        return -1;
+//    }
+//    if(count < 0){
+//        return -1;
+//    }
+//    int need = 0;//如果是负值会如何
+//    if ((int )(filed[fd].offset + count) > filed[fd].fileordir->size) {
+//        need = filed[fd].fileordir->size - filed[fd].offset;
+//    } else {
+//        need = count;
+//    }
+//    if (need < 0) {
+//        return -1;
+//    }
+//    memcpy(buf, filed[fd].fileordir->content + filed[fd].offset, need);
+//    filed[fd].offset = filed[fd].offset + need;
+//    return need;
 }
 
 off_t rseek(int fd, off_t offset, int whence) {
