@@ -191,9 +191,11 @@ int ropen(const char *pathname, int flags) {
                             freestr(str,index);
                             return -1;
                         }
+                        instruction->sibling = NULL;
                         instruction->sibling = malloc(sizeof(struct node) + 1);
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
+                        instruction->sibling->shortname = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
@@ -238,11 +240,11 @@ int ropen(const char *pathname, int flags) {
                 }
             }
         }
-        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-            freetemp(temp_pathname);
-            freestr(str,index);
-            return -1;
-        }
+//        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
+//            freetemp(temp_pathname);
+//            freestr(str,index);
+//            return -1;
+//        }
     }
     int index_fd = 0;
     for (int i = 0; i <= max_fd - 1; i++) {
@@ -259,14 +261,15 @@ int ropen(const char *pathname, int flags) {
         //filed[index_fd].flags = flags;
         filed[index_fd].type = file;
         filed[index_fd].fileordir = instruction;
-        if ((flags & 02000) == 0) {//判断不进行追加
+        if ((flags & O_APPEND) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
+
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
         }
-        if ((flags & 0b1) == 0) {//判断可读
+        if ((flags & O_WRONLY) == 0) {//判断可读
             filed[index_fd].readable = 1;
-            if ((flags & 0b10) == 0) {
+            if ((flags & O_RDWR) == 0) {
                 filed[index_fd].writable = 0;
             } else {
                 filed[index_fd].writable = 1;
@@ -275,7 +278,7 @@ int ropen(const char *pathname, int flags) {
             filed[index_fd].readable = 0;
             filed[index_fd].writable = 1;
         }
-        if ((flags & 01000) != 0 && filed[index_fd].writable == 1) {//清空
+        if ((flags & O_TRUNC) != 0 && filed[index_fd].writable == 1) {//清空
             void *temp_content = instruction->content;
             instruction->content = NULL;
             free(temp_content);
@@ -310,7 +313,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if(fd < 0 || fd >= max_fd){
         return -1;
     }
-    if (filed[fd].use==false || filed[fd].writable == 0 || filed[fd].type == dir) {
+    if (filed[fd].use == false || filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
     if(count < 0){
@@ -465,220 +468,220 @@ int rmkdir(const char *pathname) {
 }
 
 int rrmdir(const char *pathname) {
-    int length_pathname = strlen(pathname);
-    if(length_pathname > length_road){
-        return -1;
-    }
-    char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    char *temp_pathname = NULL;
-    temp_pathname = malloc(length_pathname + 1);
-    strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname) + 1;
-    if (index == 0 || index == -1) {
-        freetemp(temp_pathname);
-        freestr(str,index);
-        return -1;
-    }
-    node *instruction = root->child;
-    node *temp_instruction = root->child;//要删除的目录
-    node *temp_instruction_up = root;//要删除的上一级目录
-    node *temp = NULL;//暂存需要free的目录
-    for (int i = 0; i <= index; i++) {
-        if (i == index) {
-            if(temp_instruction->type == FILE_NODE){
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-            if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
-                if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
-                    temp = temp_instruction_up->child;
-                    temp_instruction_up->child = NULL;//malloc(sizeof (struct node));
-                    free(temp);
-                    temp = NULL;
-                } else if (temp_instruction_up->child == temp_instruction) {//首节点但不是末节点
-                    temp = temp_instruction_up->child;
-                    temp_instruction_up->child = temp_instruction->sibling;
-                    free(temp);
-                    temp = NULL;
-                } else {
-                    node *temp_nextup;
-                    temp_nextup = temp_instruction_up->child;
-                    for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == DIR_NODE) {
-                            break;
-                        }
-                        temp_nextup = temp_nextup->sibling;
-                    }
-                    if (temp_instruction->sibling == NULL) {//尾节点
-                        temp = temp_nextup->sibling;
-                        temp_nextup->sibling = NULL;
-                        free(temp);
-                        temp = NULL;
-                    } else {//中间节点
-                        temp = temp_nextup->sibling;
-                        temp_nextup->sibling = temp_instruction->sibling;
-                        free(temp);
-                        temp = NULL;
-                    }
-                }
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return 0;
-            } else {
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-        }
-        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为kong
-            freetemp(temp_pathname);
-            freestr(str,index);
-            return -1;
-        }
-        for (;;) {
-            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-                if(index == 1){
-                    temp_instruction = instruction;
-                    temp_instruction_up = root;
-                }else {
-                    if (i == index - 1) {
-                        temp_instruction = instruction;
-                    }
-                    if (i == index - 2) {
-                        temp_instruction_up = instruction;
-                    }
-                }
-                instruction = instruction->child;
-                break;
-            }
-            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-            instruction = instruction->sibling;
-        }
-    }
-    return -1;
+//    int length_pathname = strlen(pathname);
+//    if(length_pathname > length_road){
+//        return -1;
+//    }
+//    char **str = NULL;
+//    str = malloc( max_deepth_think + 1);
+//    char *temp_pathname = NULL;
+//    temp_pathname = malloc(length_pathname + 1);
+//    strcpy(temp_pathname,pathname);
+//    int index = pathname_simple(str, temp_pathname) + 1;
+//    if (index == 0 || index == -1) {
+//        freetemp(temp_pathname);
+//        freestr(str,index);
+//        return -1;
+//    }
+//    node *instruction = root->child;
+//    node *temp_instruction = root->child;//要删除的目录
+//    node *temp_instruction_up = root;//要删除的上一级目录
+//    node *temp = NULL;//暂存需要free的目录
+//    for (int i = 0; i <= index; i++) {
+//        if (i == index) {
+//            if(temp_instruction->type == FILE_NODE){
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//            if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
+//                if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
+//                    temp = temp_instruction_up->child;
+//                    temp_instruction_up->child = NULL;//malloc(sizeof (struct node));
+//                    free(temp);
+//                    temp = NULL;
+//                } else if (temp_instruction_up->child == temp_instruction) {//首节点但不是末节点
+//                    temp = temp_instruction_up->child;
+//                    temp_instruction_up->child = temp_instruction->sibling;
+//                    free(temp);
+//                    temp = NULL;
+//                } else {
+//                    node *temp_nextup;
+//                    temp_nextup = temp_instruction_up->child;
+//                    for (;;) {//寻找删除元素的上一个节点
+//                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == DIR_NODE) {
+//                            break;
+//                        }
+//                        temp_nextup = temp_nextup->sibling;
+//                    }
+//                    if (temp_instruction->sibling == NULL) {//尾节点
+//                        temp = temp_nextup->sibling;
+//                        temp_nextup->sibling = NULL;
+//                        free(temp);
+//                        temp = NULL;
+//                    } else {//中间节点
+//                        temp = temp_nextup->sibling;
+//                        temp_nextup->sibling = temp_instruction->sibling;
+//                        free(temp);
+//                        temp = NULL;
+//                    }
+//                }
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return 0;
+//            } else {
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//        }
+//        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为kong
+//            freetemp(temp_pathname);
+//            freestr(str,index);
+//            return -1;
+//        }
+//        for (;;) {
+//            if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+//                if(index == 1){
+//                    temp_instruction = instruction;
+//                    temp_instruction_up = root;
+//                }else {
+//                    if (i == index - 1) {
+//                        temp_instruction = instruction;
+//                    }
+//                    if (i == index - 2) {
+//                        temp_instruction_up = instruction;
+//                    }
+//                }
+//                instruction = instruction->child;
+//                break;
+//            }
+//            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//            instruction = instruction->sibling;
+//        }
+//    }
+//    return -1;
 }
 
 int runlink(const char *pathname) {
-    int length_pathname = strlen(pathname);
-    if(length_pathname > length_road){
-        return -1;
-    }
-    char **str = malloc( max_deepth_think + 1);
-    char *temp_pathname = malloc(length_pathname + 1);
-    strcpy(temp_pathname,pathname);
-    int index = pathname_simple(str, temp_pathname) + 1;
-    if (index == 0 || index == -1) {
-        freetemp(temp_pathname);
-        freestr(str,index);
-        return -1;
-    }
-    if(pathname[length_pathname - 1] == '/') {
-        freetemp(temp_pathname);
-        freestr(str,index);
-        return -1;
-    }
-    node *instruction;
-    instruction = root->child;
-    node *temp_instruction = root->child;
-    node *temp_instruction_up = root;//上一级目录
-    node *temp = NULL;
-    for (int i = 0; i <= index; i++) {
-        if (i == index) {
-            if(temp_instruction->type == DIR_NODE){
-//                free(temp_pathname);
-                free(str);
-                return -1;
-            }
-            if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
-                if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
-                    temp = temp_instruction_up->child;
-                    temp_instruction_up->child = NULL;
-                    free(temp->content);
-                    temp->content = NULL;
-                    free(temp);
-                    temp = NULL;
-                } else if (temp_instruction_up->child == temp_instruction) {//首节点
-                    temp = temp_instruction_up->child;
-                    temp_instruction_up->child = temp_instruction->sibling;
-                    free(temp->content);
-                    temp->content = NULL;
-                    free(temp);
-                    temp = NULL;
-                } else {
-                    node *temp_nextup;
-                    temp_nextup = temp_instruction_up->child;
-                    for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == FILE_NODE) {
-                            break;
-                        }
-                        temp_nextup = temp_nextup->sibling;
-                    }
-                    if (temp_instruction->sibling == NULL) {//尾节点
-                        temp = temp_nextup->sibling;
-                        temp_nextup->sibling = NULL;
-                        free(temp->content);
-                        temp->content = NULL;
-                        free(temp);
-                        temp = NULL;
-                    } else {
-                        temp = temp_nextup->sibling;
-                        temp_nextup->sibling = temp_instruction->sibling;//中间节点
-                        free(temp->content);
-                        temp->content = NULL;
-                        free(temp);
-                        temp = NULL;
-                    }
-                }
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return 0;
-            } else {
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-        }
-        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
-            freetemp(temp_pathname);
-            freestr(str,index);
-            return -1;
-        }
-        for (;;) {
-            if(i <= index - 2) {
-                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-                    if (i == index - 2) {
-                        temp_instruction_up = instruction;
-                    }
-                    instruction = instruction->child;
-                    break;
-                }
-            } else if(i == index - 1){
-                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
-                    if (index == 1) {
-                        temp_instruction = instruction;
-                        temp_instruction_up = root;
-                    } else {
-                        temp_instruction = instruction;
-                    }
-                    instruction = instruction->child;
-                    break;
-                }
-            }
-            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
-            instruction = instruction->sibling;
-        }
-    }
-    return -1;
+//    int length_pathname = strlen(pathname);
+//    if(length_pathname > length_road){
+//        return -1;
+//    }
+//    char **str = malloc( max_deepth_think + 1);
+//    char *temp_pathname = malloc(length_pathname + 1);
+//    strcpy(temp_pathname,pathname);
+//    int index = pathname_simple(str, temp_pathname) + 1;
+//    if (index == 0 || index == -1) {
+//        freetemp(temp_pathname);
+//        freestr(str,index);
+//        return -1;
+//    }
+//    if(pathname[length_pathname - 1] == '/') {
+//        freetemp(temp_pathname);
+//        freestr(str,index);
+//        return -1;
+//    }
+//    node *instruction;
+//    instruction = root->child;
+//    node *temp_instruction = root->child;
+//    node *temp_instruction_up = root;//上一级目录
+//    node *temp = NULL;
+//    for (int i = 0; i <= index; i++) {
+//        if (i == index) {
+//            if(temp_instruction->type == DIR_NODE){
+////                free(temp_pathname);
+//                free(str);
+//                return -1;
+//            }
+//            if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
+//                if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
+//                    temp = temp_instruction_up->child;
+//                    temp_instruction_up->child = NULL;
+//                    free(temp->content);
+//                    temp->content = NULL;
+//                    free(temp);
+//                    temp = NULL;
+//                } else if (temp_instruction_up->child == temp_instruction) {//首节点
+//                    temp = temp_instruction_up->child;
+//                    temp_instruction_up->child = temp_instruction->sibling;
+//                    free(temp->content);
+//                    temp->content = NULL;
+//                    free(temp);
+//                    temp = NULL;
+//                } else {
+//                    node *temp_nextup;
+//                    temp_nextup = temp_instruction_up->child;
+//                    for (;;) {//寻找删除元素的上一个节点
+//                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == FILE_NODE) {
+//                            break;
+//                        }
+//                        temp_nextup = temp_nextup->sibling;
+//                    }
+//                    if (temp_instruction->sibling == NULL) {//尾节点
+//                        temp = temp_nextup->sibling;
+//                        temp_nextup->sibling = NULL;
+//                        free(temp->content);
+//                        temp->content = NULL;
+//                        free(temp);
+//                        temp = NULL;
+//                    } else {
+//                        temp = temp_nextup->sibling;
+//                        temp_nextup->sibling = temp_instruction->sibling;//中间节点
+//                        free(temp->content);
+//                        temp->content = NULL;
+//                        free(temp);
+//                        temp = NULL;
+//                    }
+//                }
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return 0;
+//            } else {
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//        }
+//        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
+//            freetemp(temp_pathname);
+//            freestr(str,index);
+//            return -1;
+//        }
+//        for (;;) {
+//            if(i <= index - 2) {
+//                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
+//                    if (i == index - 2) {
+//                        temp_instruction_up = instruction;
+//                    }
+//                    instruction = instruction->child;
+//                    break;
+//                }
+//            } else if(i == index - 1){
+//                if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == FILE_NODE) {
+//                    if (index == 1) {
+//                        temp_instruction = instruction;
+//                        temp_instruction_up = root;
+//                    } else {
+//                        temp_instruction = instruction;
+//                    }
+//                    instruction = instruction->child;
+//                    break;
+//                }
+//            }
+//            if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
+//                freetemp(temp_pathname);
+//                freestr(str,index);
+//                return -1;
+//            }
+//            instruction = instruction->sibling;
+//        }
+//    }
+//    return -1;
 }
 
 void init_ramfs() {

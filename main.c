@@ -77,6 +77,13 @@ void seekall(int off, int whence, int expect) {
 
 int main() {
     init_ramfs();
+    int temp_temp = 0;
+    temp_temp = ropen("/a",O_CREAT|O_RDWR);
+    rclose(temp_temp);
+    temp_temp = ropen("/a",O_CREAT|O_RDWR);
+    assert(ropen("/a",O_RDWR) != -1);
+    assert(rmkdir("/b") != -1 );
+    assert(rmkdir("/da") != -1);
     openall_succ(O_CREAT | O_RDWR | O_WRONLY);  // can't read
     assert(rseek(8,-5,SEEK_SET) == -1);
     readall(5, -1);
