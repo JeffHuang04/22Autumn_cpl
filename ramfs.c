@@ -316,9 +316,6 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
     if (filed[fd].use == false || filed[fd].writable == 0 || filed[fd].type == dir) {
         return -1;
     }
-    if(count < 0){
-        return -1;
-    }
     int need_size = filed[fd].offset + count;
     if (need_size > filed[fd].fileordir->size) {
         if (filed[fd].offset > filed[fd].fileordir->size) {
@@ -339,13 +336,13 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
+    if(fd < 0 || fd >= max_fd){
+        return -1;
+    }
     if (filed[fd].use==false || filed[fd].readable == 0 || filed[fd].type == dir) {
         return -1;
     }
     if(filed[fd].fileordir->content == NULL) {
-        return -1;
-    }
-    if(count < 0){
         return -1;
     }
     int need = 0;//如果是负值会如何
@@ -363,25 +360,25 @@ ssize_t rread(int fd, void *buf, size_t count) {
 }
 
 off_t rseek(int fd, off_t offset, int whence) {
-//    if(fd < 0 || fd >= 4096){
-//        return -1;
-//    }
-//    if(filed[fd].use == false){
-//        return -1;
-//    }
-//    int temp_offset = 0;
-//    if (whence == SEEK_SET) {
-//        temp_offset = offset;
-//    } else if (whence == SEEK_CUR) {
-//        temp_offset = filed[fd].offset + offset;
-//    } else if(whence == SEEK_END){
-//        temp_offset = filed[fd].fileordir->size + offset;
-//    }
-//    if (temp_offset < 0) {
-//        return -1;
-//    }
-//    filed[fd].offset = temp_offset;
-//    return filed[fd].offset;
+    if(fd < 0 || fd >= 4096){
+        return -1;
+    }
+    if(filed[fd].use == false){
+        return -1;
+    }
+    int temp_offset = 0;
+    if (whence == SEEK_SET) {
+        temp_offset = offset;
+    } else if (whence == SEEK_CUR) {
+        temp_offset = filed[fd].offset + offset;
+    } else if(whence == SEEK_END){
+        temp_offset = filed[fd].fileordir->size + offset;
+    }
+    if (temp_offset < 0) {
+        return -1;
+    }
+    filed[fd].offset = temp_offset;
+    return filed[fd].offset;
 }
 
 int rmkdir(const char *pathname) {
