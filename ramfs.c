@@ -188,14 +188,14 @@ int ropen(const char *pathname, int flags) {
                             return -1;
                         }
                         instruction->sibling = NULL;
-                        instruction->sibling = malloc(sizeof(struct node) + 1);
+                        instruction->sibling = malloc(sizeof( node) + 1);
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
                         instruction->sibling->shortname = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
-                        //instruction->sibling->size = 0;
+                        instruction->sibling->size = 0;
                         instruction = instruction->sibling;
                         break;
                     } else {//判断链表自身为空并引入新节点
@@ -211,7 +211,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
-                        //instruction->size = 0;
+                        instruction->size = 0;
                         break;
                     }
                 }
@@ -262,7 +262,6 @@ int ropen(const char *pathname, int flags) {
         if ((flags & O_APPEND) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
-
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
         }
         if ((flags & O_WRONLY) == 0) {//判断可读
@@ -585,6 +584,9 @@ int runlink(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;
+                    temp->child = NULL;
+                    temp->sibling = NULL;
+                    temp->size = 0;
                     free(temp->content);
                     temp->content = NULL;
                     free(temp->shortname);
@@ -594,6 +596,9 @@ int runlink(const char *pathname) {
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
+                    temp->child = NULL;
+                    temp->sibling = NULL;
+                    temp->size = 0;
                     free(temp->content);
                     temp->content = NULL;
                     free(temp->shortname);
@@ -612,6 +617,9 @@ int runlink(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
+                        temp->child = NULL;
+                        temp->sibling = NULL;
+                        temp->size = 0;
                         free(temp->content);
                         temp->content = NULL;
                         free(temp->shortname);
@@ -621,6 +629,9 @@ int runlink(const char *pathname) {
                     } else {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
+                        temp->child = NULL;
+                        temp->sibling = NULL;
+                        temp->size = 0;
                         free(temp->content);
                         temp->content = NULL;
                         free(temp->shortname);
