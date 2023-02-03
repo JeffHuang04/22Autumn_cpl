@@ -83,7 +83,7 @@ int pathname_simple(char **str, char *temp_pathname) {
                     if(offset_ == 0){
                         str[index] = NULL;
                         str[index] = malloc(length_name + 1);
-                        //memset(str[index],'\0',length_name);
+                        memset(str[index],0,length_name);
                     }
                     memcpy(str[index] + offset_, temp_pathname + i,1);
                     offset_++;
@@ -107,8 +107,10 @@ int ropen(const char *pathname, int flags) {
     }
     char **str = NULL;
     str = malloc( max_deepth_think + 1);
+    memset(str,0,max_deepth_think);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
+    memset(str,0,length_pathname);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     node *instruction = root->child;
@@ -200,6 +202,7 @@ int ropen(const char *pathname, int flags) {
                         }
                         instruction->sibling = NULL;
                         instruction->sibling = malloc(sizeof( node) + 5);
+                        memset(instruction->sibling,0,sizeof(node));
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
                         instruction->sibling->shortname = NULL;
@@ -216,6 +219,7 @@ int ropen(const char *pathname, int flags) {
                             return -1;
                         }
                         instruction_temp->child = malloc(sizeof(struct node) + 5);
+                        memset(instruction->child,0,sizeof(node));
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
                         instruction->child = NULL;
@@ -396,8 +400,10 @@ int rmkdir(const char *pathname) {
     }
     char **str = NULL;
     str = malloc( max_deepth_think + 1);
+    memset(str,0,max_deepth_think);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
+    memset(temp_pathname,0,length_pathname);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (/*str == NULL*/index == -1 || index == 0) {
@@ -424,6 +430,7 @@ int rmkdir(const char *pathname) {
                     instruction = instruction->sibling;
                 }//检查有没有重名的
                 instruction->sibling = malloc(sizeof(struct node) + 5);
+                memset(instruction->sibling,0,sizeof (node));
                 instruction->sibling->sibling = NULL;
                 instruction->sibling->child = NULL;
                 instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
@@ -436,6 +443,7 @@ int rmkdir(const char *pathname) {
             } else {//判断链表自身为空并引入新节点
                 instruction_temp->child = malloc(sizeof(struct node) + 5);
                 instruction = instruction_temp->child;
+                memset(instruction,0,sizeof (node));
                 instruction->sibling = NULL;
                 instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
