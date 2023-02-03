@@ -53,9 +53,7 @@ uint8_t buf[1 MB];
 uint8_t ref[1 MB];
 
 int main() {
-    srand(time(NULL));
     init_ramfs();
-
     /* short */
     test(rmkdir, 0, "/a/");
     test(rmkdir, 0, "/a/b/");

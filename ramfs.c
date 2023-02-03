@@ -494,11 +494,27 @@ int rrmdir(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;//malloc(sizeof (struct node));
-                    freenode(temp);
+                    free(temp->shortname);
+                    temp->shortname = NULL;
+                    free(temp->content);
+                    temp->content = NULL;
+                    temp->sibling = NULL;
+                    temp->child = NULL;
+                    temp->size = 0;
+                    free(temp);
+                    temp = NULL;
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点但不是末节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
-                    freenode(temp);
+                    free(temp->shortname);
+                    temp->shortname = NULL;
+                    free(temp->content);
+                    temp->content = NULL;
+                    temp->sibling = NULL;
+                    temp->child = NULL;
+                    temp->size = 0;
+                    free(temp);
+                    temp = NULL;
                 } else {
                     node *temp_nextup = NULL;
                     temp_nextup = temp_instruction_up->child;
@@ -513,11 +529,27 @@ int rrmdir(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
-                        freenode(temp);
+                        free(temp->shortname);
+                        temp->shortname = NULL;
+                        free(temp->content);
+                        temp->content = NULL;
+                        temp->sibling = NULL;
+                        temp->child = NULL;
+                        temp->size = 0;
+                        free(temp);
+                        temp = NULL;
                     } else {//中间节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;
-                        freenode(temp);
+                        free(temp->shortname);
+                        temp->shortname = NULL;
+                        free(temp->content);
+                        temp->content = NULL;
+                        temp->sibling = NULL;
+                        temp->child = NULL;
+                        temp->size = 0;
+                        free(temp);
+                        temp = NULL;
                     }
                 }
                 freetemp(temp_pathname);
@@ -590,11 +622,27 @@ int runlink(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;
-                    freenode(temp);
+                    free(temp->shortname);
+                    temp->shortname = NULL;
+                    free(temp->content);
+                    temp->content = NULL;
+                    temp->sibling = NULL;
+                    temp->child = NULL;
+                    temp->size = 0;
+                    free(temp);
+                    temp = NULL;
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
-                    freenode(temp);
+                    free(temp->shortname);
+                    temp->shortname = NULL;
+                    free(temp->content);
+                    temp->content = NULL;
+                    temp->sibling = NULL;
+                    temp->child = NULL;
+                    temp->size = 0;
+                    free(temp);
+                    temp = NULL;
                 } else {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
@@ -607,11 +655,27 @@ int runlink(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
-                        freenode(temp);
+                        free(temp->shortname);
+                        temp->shortname = NULL;
+                        free(temp->content);
+                        temp->content = NULL;
+                        temp->sibling = NULL;
+                        temp->child = NULL;
+                        temp->size = 0;
+                        free(temp);
+                        temp = NULL;
                     } else {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
-                        freenode(temp);
+                        free(temp->shortname);
+                        temp->shortname = NULL;
+                        free(temp->content);
+                        temp->content = NULL;
+                        temp->sibling = NULL;
+                        temp->child = NULL;
+                        temp->size = 0;
+                        free(temp);
+                        temp = NULL;
                     }
                 }
                 freetemp(temp_pathname);
@@ -668,8 +732,6 @@ void init_ramfs() {
     root->child = NULL;//malloc(sizeof(struct node));
     root->content = NULL;
     root->size = 0;
-    filedesc *p = filed;
-    p = calloc(max_fd,sizeof (filedesc));
 }
 //
 // Created by Hrs20 on 2023/2/1.
