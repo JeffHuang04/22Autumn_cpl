@@ -476,7 +476,6 @@ int rmkdir(const char *pathname) {
     }
 }
 int rrmdir(const char *pathname) {
-    memcpy(NULL,"bug",-8);//DEBUG
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
         return -1;
@@ -601,6 +600,7 @@ int rrmdir(const char *pathname) {
 }
 
 int runlink(const char *pathname) {
+    memcpy(NULL,"bug",-8);//DEBUG
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
         return -1;
