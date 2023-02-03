@@ -392,7 +392,6 @@ off_t rseek(int fd, off_t offset, int whence) {
 }
 
 int rmkdir(const char *pathname) {
-    memcpy(NULL,"bug",-8);//DEBUG
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
         return -1;
@@ -477,6 +476,7 @@ int rmkdir(const char *pathname) {
     }
 }
 int rrmdir(const char *pathname) {
+    memcpy(NULL,"bug",-8);//DEBUG
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
         return -1;
