@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#define max_deepth_think 1024
+#define max_deepth_think 30
 #define max_fd 4096
 #define length_name 32
 #define length_road 1024
@@ -43,6 +43,7 @@ void freestr(char **str,int index){
     str = NULL;
 }
 void freetemp(char *temp){
+
     if(temp != NULL) {
         free(temp);
         temp = NULL;
@@ -55,14 +56,14 @@ int pathname_simple(char **str, char *temp_pathname) {
         int offset_ = 0;
         for (int i = 0; i <= length - 1 ; i++) {
             if(*(temp_pathname + i) == '/' ) {
+                offset_ = 0;
                 if(( i< length - 1 && *(temp_pathname + i + 1) == '/' ) || i == length - 1) {
-                    offset_ = 0;
+
                 }else{
                     index ++;
-                    offset_ = 0;
                 }
             }else{
-                if (*(temp_pathname + i) == 46 ||
+                if (*(temp_pathname + i) == '.' ||
                     (*(temp_pathname + i) >= '0' && *(temp_pathname + i) <= '9') ||
                     (*(temp_pathname + i) >= 'a' && *(temp_pathname + i) <= 'z') ||
                     (*(temp_pathname + i) >= 'A' && *(temp_pathname + i) <= 'Z')){
@@ -404,7 +405,7 @@ int rmkdir(const char *pathname) {
             if (instruction != NULL) {
                 for (;;) {
                     //if (instruction->shortname != NULL) {//判断链表自身是否为空（只有第一次循环有用）
-                    if (strcmp(str[i], instruction->shortname) == 0 /*&& instruction->type == DIR_NODE*/) {
+                    if (strcmp(str[i], instruction->shortname) == 0 ) {
                         freetemp(temp_pathname);
                         freestr(str,index);
                         return -1;
@@ -452,8 +453,6 @@ int rmkdir(const char *pathname) {
                 break;
             }
             if (instruction->sibling == NULL) {//遍历后发现父级目录不存在
-                //free(temp_string);
-
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return -1;
@@ -461,7 +460,6 @@ int rmkdir(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
-    return 0;
 }
 
 int rrmdir(const char *pathname) {
@@ -486,11 +484,6 @@ int rrmdir(const char *pathname) {
     node *temp = NULL;//暂存需要free的目录
     for (int i = 0; i <= index; i++) {
         if (i == index) {
-            if(temp_instruction->type == FILE_NODE){
-                freetemp(temp_pathname);
-                freestr(str,index);
-                return -1;
-            }
             if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
@@ -503,10 +496,12 @@ int rrmdir(const char *pathname) {
                     free(temp);
                     temp = NULL;
                 } else {
-                    node *temp_nextup;
+                    node *temp_nextup = NULL;
                     temp_nextup = temp_instruction_up->child;
                     for (;;) {//寻找删除元素的上一个节点
-                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0 && temp_nextup->sibling->type == DIR_NODE) {
+                        if (strcmp(temp_nextup->sibling->shortname, str[index - 1]) == 0
+                            && temp_nextup->sibling->type == DIR_NODE) {
+                            //temp_nextup = temp_nextup->sibling;
                             break;
                         }
                         temp_nextup = temp_nextup->sibling;
@@ -532,7 +527,7 @@ int rrmdir(const char *pathname) {
                 return -1;
             }
         }
-        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为kong
+        if (instruction == NULL) {//排除直接查找跨级目录即这级目录为空
             freetemp(temp_pathname);
             freestr(str,index);
             return -1;
@@ -561,7 +556,6 @@ int rrmdir(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
-    return -1;
 }
 
 int runlink(const char *pathname) {
@@ -583,24 +577,21 @@ int runlink(const char *pathname) {
         freestr(str,index);
         return -1;
     }
-    node *instruction;
+    node *instruction = NULL;
     instruction = root->child;
     node *temp_instruction = root->child;
     node *temp_instruction_up = root;//上一级目录
     node *temp = NULL;
     for (int i = 0; i <= index; i++) {
         if (i == index) {
-            if(temp_instruction->type == DIR_NODE){
-//                free(temp_pathname);
-                free(str);
-                return -1;
-            }
             if (instruction == NULL) {//该目录为空『为首节点/为中间节点/为末节点/（既为首节点又为末节点）
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;
                     free(temp->content);
                     temp->content = NULL;
+                    free(temp->shortname);
+                    temp->shortname = NULL;
                     free(temp);
                     temp = NULL;
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
@@ -608,6 +599,8 @@ int runlink(const char *pathname) {
                     temp_instruction_up->child = temp_instruction->sibling;
                     free(temp->content);
                     temp->content = NULL;
+                    free(temp->shortname);
+                    temp->shortname = NULL;
                     free(temp);
                     temp = NULL;
                 } else {
@@ -624,6 +617,8 @@ int runlink(const char *pathname) {
                         temp_nextup->sibling = NULL;
                         free(temp->content);
                         temp->content = NULL;
+                        free(temp->shortname);
+                        temp->shortname = NULL;
                         free(temp);
                         temp = NULL;
                     } else {
@@ -631,6 +626,8 @@ int runlink(const char *pathname) {
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
                         free(temp->content);
                         temp->content = NULL;
+                        free(temp->shortname);
+                        temp->shortname = NULL;
                         free(temp);
                         temp = NULL;
                     }
@@ -678,7 +675,6 @@ int runlink(const char *pathname) {
             instruction = instruction->sibling;
         }
     }
-    return -1;
 }
 
 void init_ramfs() {
