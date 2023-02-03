@@ -72,7 +72,7 @@ int pathname_simple(char **str, char *temp_pathname) {
                     if(offset_ == 0){
                         str[index] = NULL;
                         str[index] = malloc(length_name + 1);
-                        memset(str[index],'\0',length_name);
+                        //memset(str[index],'\0',length_name);
                     }
                     memcpy(str[index] + offset_, temp_pathname + i,1);
                     offset_++;
@@ -262,6 +262,7 @@ int ropen(const char *pathname, int flags) {
         if ((flags & O_APPEND) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
+
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
         }
         if ((flags & O_WRONLY) == 0) {//判断可读
