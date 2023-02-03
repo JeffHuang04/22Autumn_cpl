@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#define max_deepth_think 30
+#define max_deepth_think 1024
 #define max_fd 4096
 #define length_name 32
 #define length_road 1024
@@ -43,7 +43,6 @@ void freestr(char **str,int index){
     str = NULL;
 }
 void freetemp(char *temp){
-
     if(temp != NULL) {
         free(temp);
         temp = NULL;
@@ -73,6 +72,7 @@ int pathname_simple(char **str, char *temp_pathname) {
                     if(offset_ == 0){
                         str[index] = NULL;
                         str[index] = malloc(length_name + 1);
+                        memset(str[index],'\0',length_name);
                     }
                     memcpy(str[index] + offset_, temp_pathname + i,1);
                     offset_++;
@@ -160,11 +160,6 @@ int ropen(const char *pathname, int flags) {
         } else {//判断要创建文件、打开文件、打开目录
             for (int i = 0; i <= index - 1; i++) {
                 if (i == index - 1) {
-//                    if (instruction_temp->type == FILE_NODE) {
-//                        free(temp_string);
-//                        free(str);
-//                        return -1;
-//                    }
                     if (instruction != NULL) {
                         int flag_file = 0;
                         for (;;) {
@@ -200,6 +195,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
+                        instruction->sibling->size = 0;
                         instruction = instruction->sibling;
                         break;
                     } else {//判断链表自身为空并引入新节点
@@ -215,6 +211,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
+                        instruction->size = 0;
                         break;
                     }
                 }
@@ -241,11 +238,6 @@ int ropen(const char *pathname, int flags) {
                 }
             }
         }
-//        if (pathname[length_pathname - 1] == '/' && instruction->type == FILE_NODE) {
-//            freetemp(temp_pathname);
-//            freestr(str,index);
-//            return -1;
-//        }
     }
     int index_fd = 0;
     for (int i = 0; i <= max_fd - 1; i++) {
@@ -253,6 +245,11 @@ int ropen(const char *pathname, int flags) {
             index_fd = i;
             filed[i].use = true;
             break;
+        }
+        if(i == max_fd - 1){
+            freetemp(temp_pathname);
+            freestr(str,index);
+            return -1;
         }
     }
     if (instruction->type == DIR_NODE) {
@@ -265,7 +262,6 @@ int ropen(const char *pathname, int flags) {
         if ((flags & O_APPEND) == 0) {//判断不进行追加
             filed[index_fd].offset = 0;
         } else {
-
             filed[index_fd].offset = instruction->size;//size应包含‘/0’
         }
         if ((flags & O_WRONLY) == 0) {//判断可读
