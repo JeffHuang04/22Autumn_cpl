@@ -43,10 +43,8 @@ void freestr(char **str,int index){
     str = NULL;
 }
 void freetemp(char *temp){
-    if(temp != NULL) {
-        free(temp);
-        temp = NULL;
-    }
+    free(temp);
+    temp = NULL;
 }
 void freenode(node *temp){
     free(temp->shortname);
@@ -348,6 +346,7 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
+    memcpy(NULL,NULL,11);//DEBUG
     if(fd < 0 || fd >= max_fd){
         return -1;
     }
