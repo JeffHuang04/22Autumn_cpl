@@ -346,7 +346,6 @@ ssize_t rwrite(int fd, const void *buf, size_t count) {
 }
 
 ssize_t rread(int fd, void *buf, size_t count) {
-    memcpy(NULL,"bug",-8);//DEBUG
     if(fd < 0 || fd >= max_fd){
         return -1;
     }
@@ -371,6 +370,7 @@ ssize_t rread(int fd, void *buf, size_t count) {
 }
 
 off_t rseek(int fd, off_t offset, int whence) {
+    memcpy(NULL,"bug",-8);//DEBUG
     if(fd < 0 || fd >= 4096){
         return -1;
     }
