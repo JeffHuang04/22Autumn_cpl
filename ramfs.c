@@ -195,7 +195,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
-                        instruction->sibling->size = 0;
+                        //instruction->sibling->size = 0;
                         instruction = instruction->sibling;
                         break;
                     } else {//判断链表自身为空并引入新节点
@@ -211,7 +211,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
-                        instruction->size = 0;
+                        //instruction->size = 0;
                         break;
                     }
                 }
