@@ -370,7 +370,6 @@ ssize_t rread(int fd, void *buf, size_t count) {
 }
 
 off_t rseek(int fd, off_t offset, int whence) {
-    memcpy(NULL,"bug",-8);//DEBUG
     if(fd < 0 || fd >= 4096){
         return -1;
     }
