@@ -48,6 +48,17 @@ void freetemp(char *temp){
         temp = NULL;
     }
 }
+void freenode(node *temp){
+    free(temp->shortname);
+    temp->shortname = NULL;
+    free(temp->content);
+    temp->content = NULL;
+    temp->sibling = NULL;
+    temp->child = NULL;
+    temp->size = 0;
+    free(temp);
+    temp = NULL;
+}
 int pathname_simple(char **str, char *temp_pathname) {
     int length = strlen(temp_pathname);
     if (*temp_pathname == '/') {
@@ -188,14 +199,14 @@ int ropen(const char *pathname, int flags) {
                             return -1;
                         }
                         instruction->sibling = NULL;
-                        instruction->sibling = malloc(sizeof( node) + 1);
+                        instruction->sibling = malloc(sizeof( node) + 5);
                         instruction->sibling->sibling = NULL;
                         instruction->sibling->child = NULL;
                         instruction->sibling->shortname = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
-                        //instruction->sibling->size = 0;
+                        instruction->sibling->size = 0;
                         instruction = instruction->sibling;
                         break;
                     } else {//判断链表自身为空并引入新节点
@@ -204,14 +215,14 @@ int ropen(const char *pathname, int flags) {
                             freestr(str,index);
                             return -1;
                         }
-                        instruction_temp->child = malloc(sizeof(struct node) + 1);
+                        instruction_temp->child = malloc(sizeof(struct node) + 5);
                         instruction = instruction_temp->child;
                         instruction->sibling = NULL;
                         instruction->child = NULL;
                         instruction->shortname = malloc(strlen(str[i]) + 1);
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
-                        //instruction->size = 0;
+                        instruction->size = 0;
                         break;
                     }
                 }
@@ -412,23 +423,25 @@ int rmkdir(const char *pathname) {
                     }
                     instruction = instruction->sibling;
                 }//检查有没有重名的
-                instruction->sibling = malloc(sizeof(struct node));
+                instruction->sibling = malloc(sizeof(struct node) + 5);
                 instruction->sibling->sibling = NULL;
                 instruction->sibling->child = NULL;
                 instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
+                instruction->sibling->size = 0;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
             } else {//判断链表自身为空并引入新节点
-                instruction_temp->child = malloc(sizeof(struct node));
+                instruction_temp->child = malloc(sizeof(struct node) + 5);
                 instruction = instruction_temp->child;
                 instruction->sibling = NULL;
                 instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
+                instruction->size = 0;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
@@ -441,9 +454,6 @@ int rmkdir(const char *pathname) {
         }
         for (;;) {
             if (strcmp(str[i], instruction->shortname) == 0 && instruction->type == DIR_NODE) {
-//                if (instruction->child == NULL) {
-//                    instruction->child = malloc(sizeof(struct node));
-//                }
                 instruction_temp = instruction;
                 instruction = instruction->child;
                 break;
@@ -484,13 +494,11 @@ int rrmdir(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;//malloc(sizeof (struct node));
-                    free(temp);
-                    temp = NULL;
+                    freenode(temp);
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点但不是末节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
-                    free(temp);
-                    temp = NULL;
+                    freenode(temp);
                 } else {
                     node *temp_nextup = NULL;
                     temp_nextup = temp_instruction_up->child;
@@ -505,13 +513,11 @@ int rrmdir(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
-                        free(temp);
-                        temp = NULL;
+                        freenode(temp);
                     } else {//中间节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;
-                        free(temp);
-                        temp = NULL;
+                        freenode(temp);
                     }
                 }
                 freetemp(temp_pathname);
@@ -584,27 +590,11 @@ int runlink(const char *pathname) {
                 if (temp_instruction_up->child == temp_instruction && temp_instruction->sibling == NULL) {//既为首又为末
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = NULL;
-                    temp->child = NULL;
-                    temp->sibling = NULL;
-                    temp->size = 0;
-                    free(temp->content);
-                    temp->content = NULL;
-                    free(temp->shortname);
-                    temp->shortname = NULL;
-                    free(temp);
-                    temp = NULL;
+                    freenode(temp);
                 } else if (temp_instruction_up->child == temp_instruction) {//首节点
                     temp = temp_instruction_up->child;
                     temp_instruction_up->child = temp_instruction->sibling;
-                    temp->child = NULL;
-                    temp->sibling = NULL;
-                    temp->size = 0;
-                    free(temp->content);
-                    temp->content = NULL;
-                    free(temp->shortname);
-                    temp->shortname = NULL;
-                    free(temp);
-                    temp = NULL;
+                    freenode(temp);
                 } else {
                     node *temp_nextup;
                     temp_nextup = temp_instruction_up->child;
@@ -617,27 +607,11 @@ int runlink(const char *pathname) {
                     if (temp_instruction->sibling == NULL) {//尾节点
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = NULL;
-                        temp->child = NULL;
-                        temp->sibling = NULL;
-                        temp->size = 0;
-                        free(temp->content);
-                        temp->content = NULL;
-                        free(temp->shortname);
-                        temp->shortname = NULL;
-                        free(temp);
-                        temp = NULL;
+                        freenode(temp);
                     } else {
                         temp = temp_nextup->sibling;
                         temp_nextup->sibling = temp_instruction->sibling;//中间节点
-                        temp->child = NULL;
-                        temp->sibling = NULL;
-                        temp->size = 0;
-                        free(temp->content);
-                        temp->content = NULL;
-                        free(temp->shortname);
-                        temp->shortname = NULL;
-                        free(temp);
-                        temp = NULL;
+                        freenode(temp);
                     }
                 }
                 freetemp(temp_pathname);
