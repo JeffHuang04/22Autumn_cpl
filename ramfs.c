@@ -219,8 +219,8 @@ int ropen(const char *pathname, int flags) {
                             return -1;
                         }
                         instruction_temp->child = malloc(sizeof(struct node) + 5);
-                        memset(instruction->child,0,sizeof(node));
                         instruction = instruction_temp->child;
+                        memset(instruction,0,sizeof(node));
                         instruction->sibling = NULL;
                         instruction->child = NULL;
                         instruction->shortname = malloc(strlen(str[i]) + 1);
