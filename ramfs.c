@@ -9,8 +9,8 @@
 #define length_road 1024
 typedef struct node {
     enum {
-        FILE_NODE = 1,
-        DIR_NODE = 2
+        FILE_NODE,
+        DIR_NODE
     } type;
     struct node *child;
     struct node *sibling;
@@ -22,15 +22,15 @@ node *root = NULL;
 typedef struct filedesc {
     bool use;
     enum {
-        file = 1,
-        dir = 2,
+        file ,
+        dir ,
     } type;
     int offset;
     int writable;
     int readable;
     node *fileordir;
 } filedesc;
-filedesc filed[max_fd + 3];
+filedesc filed[max_fd + 1];
 void freestr(char **str,int index){
     if(index >= 1) {
         for (int i = 0; i <= index - 1; i++) {
@@ -88,7 +88,6 @@ int pathname_simple(char **str, char *temp_pathname) {
                     memcpy(str[index] + offset_, temp_pathname + i,1);
                     offset_++;
                     memcpy(str[index] + offset_,"\0",1);
-//                    char *temp_show = str[index];
                 } else {
                     return -2;
                 }
@@ -99,7 +98,6 @@ int pathname_simple(char **str, char *temp_pathname) {
         return -2;
     }
 }//没问题
-
 int ropen(const char *pathname, int flags) {
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
@@ -207,6 +205,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->sibling->child = NULL;
                         instruction->sibling->shortname = NULL;
                         instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
+                        memset(instruction->sibling->shortname , 0 , strlen(str[i]));
                         strcpy(instruction->sibling->shortname, str[i]);
                         instruction->sibling->type = FILE_NODE;
                         instruction->sibling->size = 0;
@@ -224,6 +223,7 @@ int ropen(const char *pathname, int flags) {
                         instruction->sibling = NULL;
                         instruction->child = NULL;
                         instruction->shortname = malloc(strlen(str[i]) + 1);
+                        memset(instruction->shortname,0, strlen(str[i]));
                         strcpy(instruction->shortname, str[i]);
                         instruction->type = FILE_NODE;
                         instruction->size = 0;
@@ -434,6 +434,7 @@ int rmkdir(const char *pathname) {
                 instruction->sibling->sibling = NULL;
                 instruction->sibling->child = NULL;
                 instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
+                memset(instruction->sibling->shortname,0,strlen(str[i]));
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
                 instruction->sibling->size = 0;
@@ -447,6 +448,7 @@ int rmkdir(const char *pathname) {
                 instruction->sibling = NULL;
                 instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
+                memset(instruction->shortname,0, strlen(str[i]));
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
                 instruction->size = 0;
@@ -475,7 +477,6 @@ int rmkdir(const char *pathname) {
         }
     }
 }
-
 int rrmdir(const char *pathname) {
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
@@ -733,13 +734,18 @@ int runlink(const char *pathname) {
 
 void init_ramfs() {
     root = malloc(sizeof(struct node) + 5);
+    memset(root,0,sizeof (node));
     root->type = DIR_NODE;
     root->shortname = malloc(2);
+    memset(root->shortname,0,2);
     strcpy(root->shortname,"/");
     root->sibling = NULL;
     root->child = NULL;//malloc(sizeof(struct node));
     root->content = NULL;
     root->size = 0;
+    for (int i = 0; i <= max_fd - 1 ; i++) {
+        memset(&filed[i],0, sizeof(filedesc));
+    }
 }
 //
 // Created by Hrs20 on 2023/2/1.
