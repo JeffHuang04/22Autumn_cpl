@@ -107,8 +107,8 @@ int ropen(const char *pathname, int flags) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    memset(str,0,max_deepth_think);
+    str = malloc( (max_deepth_think + 1)*sizeof(char*));
+    memset(str,0,(max_deepth_think)*sizeof(char*));
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     memset(str,0,length_pathname + 1);
@@ -403,7 +403,7 @@ int rmkdir(const char *pathname) {
     }
     char **str = NULL;
     str = malloc( (max_deepth_think + 1)*sizeof(char*));
-    memset(str,0,(max_deepth_think + 1)*sizeof(char*));
+    memset(str,0,(max_deepth_think)*sizeof(char*));
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     memset(temp_pathname,0,length_pathname + 1);
@@ -488,8 +488,8 @@ int rrmdir(const char *pathname) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    memset(str,0,max_deepth_think );
+    str = malloc( (max_deepth_think + 1)*sizeof(char*));
+    memset(str,0,(max_deepth_think)*sizeof(char*) );
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     memset(temp_pathname,0,length_pathname + 1);
@@ -614,8 +614,8 @@ int runlink(const char *pathname) {
         return -1;
     }
     char **str = NULL;
-    str = malloc( max_deepth_think + 1);
-    memset(str,0,max_deepth_think);
+    str = malloc( (max_deepth_think + 1)*sizeof(char*));
+    memset(str,0,(max_deepth_think)*sizeof(char*));
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     memset(temp_pathname , 0 , length_pathname + 1);
