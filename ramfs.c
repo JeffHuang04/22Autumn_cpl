@@ -353,7 +353,7 @@ ssize_t rread(int fd, void *buf, size_t count) {
         return -1;
     }
     if(filed[fd].fileordir->content == NULL) {
-        return -1;
+        return 0;
     }
     int need = 0;//如果是负值会如何
     if ((int )(filed[fd].offset + count) > filed[fd].fileordir->size) {
@@ -743,7 +743,7 @@ void init_ramfs() {
     memset(root->shortname,0,2);
     strcpy(root->shortname,"/");
     root->sibling = NULL;
-    root->child = NULL;//malloc(sizeof(struct node));
+    root->child = NULL;
     root->content = NULL;
     root->size = 0;
     for (int i = 0; i <= max_fd - 1 ; i++) {
