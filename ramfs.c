@@ -487,6 +487,7 @@ int rrmdir(const char *pathname) {
     str = malloc( max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
+    memset(temp_pathname,0,length_pathname);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
@@ -609,6 +610,7 @@ int runlink(const char *pathname) {
     }
     char **str = malloc( max_deepth_think + 1);
     char *temp_pathname = malloc(length_pathname + 1);
+    memset(temp_pathname,0,length_pathname);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
     if (index == 0 || index == -1) {
