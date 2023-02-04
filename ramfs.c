@@ -403,7 +403,7 @@ int rmkdir(const char *pathname) {
     }
     char **str = NULL;
     str = malloc( max_deepth_think + 1);
-    memset(str,0,max_deepth_think);
+    memset(str,0,max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
     memset(temp_pathname,0,length_pathname + 1);
@@ -437,10 +437,11 @@ int rmkdir(const char *pathname) {
                 instruction->sibling->sibling = NULL;
                 instruction->sibling->child = NULL;
                 instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
-                memset(instruction->sibling->shortname,0,strlen(str[i]));
+                memset(instruction->sibling->shortname,0,strlen(str[i]) + 1);
                 strcpy(instruction->sibling->shortname, str[i]);
                 instruction->sibling->type = DIR_NODE;
                 instruction->sibling->size = 0;
+                instruction->sibling->content = NULL;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
@@ -451,10 +452,11 @@ int rmkdir(const char *pathname) {
                 instruction->sibling = NULL;
                 instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
-                memset(instruction->shortname,0, strlen(str[i]));
+                memset(instruction->shortname,0, strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
                 instruction->size = 0;
+                instruction->content = NULL;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
