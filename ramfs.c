@@ -81,7 +81,7 @@ int pathname_simple(char **str, char *temp_pathname) {
                     }
                     if(offset_ == 0){
 //                        str[index] = NULL;
-//                        str[index] = malloc(length_name + 1);
+                        str[index] = malloc(length_name + 1);
                         memset(str[index],0,length_name);
                     }
                     memcpy(str[index] + offset_, temp_pathname + i,1);
@@ -752,10 +752,10 @@ void init_ramfs() {
     }
     str = malloc(max_deepth_think + 1);
     memset(str,0,max_deepth_think);
-    for (int i = 0; i <= max_deepth_think - 1 ; i++) {
-        str[i] = NULL;
-        str[i] = malloc(length_name + 1);
-    }
+//    for (int i = 0; i <= max_deepth_think - 1 ; i++) {
+//        str[i] = NULL;
+//        str[i] = malloc(length_name + 1);
+//    }
 }
 //
 // Created by Hrs20 on 2023/2/1.
