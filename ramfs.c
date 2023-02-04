@@ -398,13 +398,13 @@ int rmkdir(const char *pathname) {
     }
     char **str = NULL;
     str = malloc( max_deepth_think + 1);
-    memset(str,0,max_deepth_think);
+    memset(str,0,max_deepth_think + 1);
     char *temp_pathname = NULL;
     temp_pathname = malloc(length_pathname + 1);
-    memset(temp_pathname,0,length_pathname);
+    memset(temp_pathname,0,length_pathname + 1);
     strcpy(temp_pathname,pathname);
     int index = pathname_simple(str, temp_pathname) + 1;
-    if (/*str == NULL*/index == -1 || index == 0) {
+    if (index == -1 || index == 0) {
         freetemp(temp_pathname);
         freestr(str,index);
         return -1;
@@ -427,29 +427,32 @@ int rmkdir(const char *pathname) {
                     }
                     instruction = instruction->sibling;
                 }//检查有没有重名的
-                instruction->sibling = malloc(sizeof(struct node) + 5);
+                instruction->sibling = malloc(sizeof(struct node) + 1);
                 memset(instruction->sibling,0,sizeof (node));
-                instruction->sibling->sibling = NULL;
-                instruction->sibling->child = NULL;
-                instruction->sibling->shortname = malloc(strlen(str[i]) + 1);
-                memset(instruction->sibling->shortname,0,strlen(str[i]));
-                strcpy(instruction->sibling->shortname, str[i]);
-                instruction->sibling->type = DIR_NODE;
-                instruction->sibling->size = 0;
+                instruction = instruction->sibling;
+                instruction->sibling = NULL;
+                instruction->child = NULL;
+                instruction->shortname = malloc(strlen(str[i]) + 1);
+                memset(instruction->shortname,0,strlen(str[i]) + 1);
+                strcpy(instruction->shortname, str[i]);
+                instruction->type = DIR_NODE;
+                instruction->size = 0;
+                instruction->content = NULL;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
             } else {//判断链表自身为空并引入新节点
-                instruction_temp->child = malloc(sizeof(struct node) + 5);
+                instruction_temp->child = malloc(sizeof(struct node) + 1);
                 instruction = instruction_temp->child;
                 memset(instruction,0,sizeof (node));
                 instruction->sibling = NULL;
                 instruction->child = NULL;
                 instruction->shortname = malloc(strlen(str[i]) + 1);
-                memset(instruction->shortname,0, strlen(str[i]));
+                memset(instruction->shortname,0, strlen(str[i]) + 1);
                 strcpy(instruction->shortname, str[i]);
                 instruction->type = DIR_NODE;
                 instruction->size = 0;
+                instruction->content = NULL;
                 freetemp(temp_pathname);
                 freestr(str,index);
                 return 0;
