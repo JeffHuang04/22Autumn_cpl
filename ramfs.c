@@ -393,6 +393,7 @@ off_t rseek(int fd, off_t offset, int whence) {
 }
 
 int rmkdir(const char *pathname) {
+    memcpy(NULL,"hello",5);
     int length_pathname = strlen(pathname);
     if(length_pathname > length_road){
         return -1;
